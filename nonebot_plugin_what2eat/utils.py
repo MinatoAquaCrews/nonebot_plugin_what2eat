@@ -3,6 +3,7 @@ import random
 from pathlib import Path
 from typing import Optional, Union, List, Dict
 import nonebot
+import os
 
 try:
     import ujson as json
@@ -10,8 +11,9 @@ except ModuleNotFoundError:
     import json
 
 _WHAT2EAT_PATH = nonebot.get_driver().config.what2eat_path
-DEFAULT_PATH = "./data/what2eat"
+DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "resource")
 WHAT2EAT_PATH = DEFAULT_PATH if not _WHAT2EAT_PATH else _WHAT2EAT_PATH
+
 _EATING_LIMIT = nonebot.get_driver().config.eating_limit
 EATING_LIMIT = 5 if not _EATING_LIMIT else _EATING_LIMIT
 
