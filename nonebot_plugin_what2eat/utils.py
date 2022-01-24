@@ -1,8 +1,9 @@
-from nonebot.adapters.cqhttp import GroupMessageEvent, MessageSegment
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
+import nonebot
 import random
+import os
 from pathlib import Path
 from typing import Optional
-import nonebot
 from enum import Enum
 
 try:
@@ -12,7 +13,7 @@ except ModuleNotFoundError:
 
 SUPERUSERS = nonebot.get_driver().config.superusers
 _WHAT2EAT_PATH = nonebot.get_driver().config.what2eat_path
-DEFAULT_PATH = "./data/what2eat"
+DEFAULT_PATH = os.path.join(__file__, "resource")
 WHAT2EAT_PATH = DEFAULT_PATH if not _WHAT2EAT_PATH else _WHAT2EAT_PATH
 _EATING_LIMIT = nonebot.get_driver().config.eating_limit
 EATING_LIMIT = 6 if not _EATING_LIMIT else _EATING_LIMIT
@@ -24,7 +25,8 @@ class Meals(Enum):
     BREAKFAST   = "_breakfast"
     LUNCH       = "_lunch"
     DINNER      = "_dinner"
-    SNACK       = "_midnight_snack"
+    SNACK       = "_snack"
+    EVENING     = "_midnight_snack"
 
 class EatingManager:
 
@@ -214,5 +216,45 @@ class EatingManager:
             return msg if len(msg) > 0 else "还没有菜单呢，请[添加 菜名]🤤"
         else:
             return msg if len(msg) > 0 else "没有群特色菜单，请[添加 菜名]🤤"
+        
+    def eating_tips(self, meal: Meals) -> str:
+        if meal == Meals.BREAKFAST:
+            msg = random.choice(
+                [
+                    "7点啦，吃早餐啦！",
+                    "一日之计在于晨，懒狗还不起床？"
+                ]
+            )
+        elif meal == Meals.LUNCH:
+            msg = random.choice(
+                [
+                    "12点啦，吃午餐啦！",
+                    "中午还不恰点好的？整点碳水大餐嗯造吧！"
+                ]
+            )
+        elif meal == Meals.SNACK:
+            msg = random.choice(
+                [
+                    "三点了，饮茶了先！",
+                    "摸鱼时刻，整点恰滴先~"
+                ]
+            )
+        elif meal == Meals.DINNER:
+            msg = random.choice(
+                [
+                    "6点了！不会真有人晚上加班恰外卖吧？",
+                    "下班咯，这不开造？"
+                ]
+            )
+        elif meal == Meals.EVENING:
+            msg = random.choice(
+                [
+                    "10点啦，加顿夜宵吧！",
+                    "夜宵这不来个外卖？"
+                ]
+            )
+        
+        return msg
+
 
 eating_manager = EatingManager(Path(WHAT2EAT_PATH))

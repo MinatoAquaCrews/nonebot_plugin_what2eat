@@ -4,7 +4,7 @@
 
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable-next-line MD036 -->
-_🍔🌮🍜🍮🍣 今天吃什么 🍣🍮🍜🌮🍔_
+_🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
 <!-- prettier-ignore-end -->
 
 </div>
@@ -16,11 +16,11 @@ _🍔🌮🍜🍮🍣 今天吃什么 🍣🍮🍜🌮🍔_
   </a>
   
   <a href="https://github.com/nonebot/nonebot2">
-    <img src="https://img.shields.io/badge/nonebot2-2.0.0alpha.16-green">
+    <img src="https://img.shields.io/badge/nonebot2-2.0.0beta.1-green">
   </a>
   
   <a href="">
-    <img src="https://img.shields.io/badge/release-v0.1.1-orange">
+    <img src="https://img.shields.io/badge/release-v0.2.0-orange">
   </a>
   
 </p>
@@ -29,19 +29,19 @@ _🍔🌮🍜🍮🍣 今天吃什么 🍣🍮🍜🌮🍔_
 
 ## 版本
 
-v0.1.1
+v0.2.0
 
-⚠ 适配nonebot2-2.0.0alpha.16，适配beta.1版本将会放在dev分支。
+⚠ 适配nonebot2-2.0.0beta.1；适配alpha.16版本参见[alpha.16分支](https://github.com/KafCoppelia/nonebot_plugin_what2eat/tree/alpha.16)
 
 ## 安装
 
-1. 通过`pip`或`nb`安装；
+1. 通过`pip`或`nb`，版本请指定`^0.2.0`
 
 2. 数据默认位于`./resource/data.json`，可通过设置`env`下`WHAT2EAT_PATH`更改；基础菜单、群特色菜单及群友询问Bot次数会记录在该文件中；
 
 ## 功能
 
-1. 选择恐惧症？让Bot给你今天吃什么建议！🍱
+1. 选择恐惧症？让Bot给你今天吃什么建议！
 
 2. 每餐每个时间段询问Bot建议上限可通过`EATING_LIMIT`修改（默认6次），每日6点、11点、17点、22点（夜宵）自动刷新；
 
@@ -49,7 +49,7 @@ v0.1.1
 
 4. 各群特色菜单相互独立；各群每个时间段询问Bot建议次数独立；Bot会**综合各群特色菜单及基础菜单**给出建议；
 
-5. *TODO*：提醒按时吃饭小助手🤔，在做了在做了……
+5. *TODO*：提醒按时吃饭小助手🤔；
 
 ## 命令
 
@@ -59,7 +59,22 @@ v0.1.1
 
 3. 查看菜单：查看菜单/群菜单；
 
-4. [仅超管权限] 加菜至基础菜单：加菜 菜名；
+4. [仅超管权限] 添加至基础菜单：加菜 菜名；
+
+## 效果
+
+案例1：
+Q：今天吃什么
+
+A：建议肯德基
+
+（……吃什么*5）
+
+Q：今晚吃什么
+
+A：你今天已经吃得够多了！
+
+Q：
 
 ## 注意
 
