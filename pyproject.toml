@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_what2eat"
-version = "0.1.1"
+version = "0.1.2"
 description = "What to eat today for your breakfast, lunch, dinner and even midnight snack!"
 authors = ["KafCoppelia <k740677208@gmail.com>"]
 license = "MIT"

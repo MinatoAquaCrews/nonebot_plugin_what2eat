@@ -20,7 +20,7 @@ _🍔🌮🍜🍮🍣 今天吃什么 🍣🍮🍜🌮🍔_
   </a>
   
   <a href="">
-    <img src="https://img.shields.io/badge/release-v0.1.1-orange">
+    <img src="https://img.shields.io/badge/release-v0.1.2-orange">
   </a>
   
 </p>
@@ -29,13 +29,13 @@ _🍔🌮🍜🍮🍣 今天吃什么 🍣🍮🍜🌮🍔_
 
 ## 版本
 
-v0.1.1
+v0.1.2
 
-⚠ 适配nonebot2-2.0.0alpha.16，适配beta.1版本将会放在dev分支。
+⚠ 适配nonebot2-2.0.0alpha.16，适配beta.1版本参见[beta.1分支](https://github.com/KafCoppelia/nonebot_plugin_what2eat/tree/beta.1)
 
 ## 安装
 
-1. 通过`pip`或`nb`安装；
+1. 通过`pip`或`nb`安装版本，版本请指定`^0.1.2`；
 
 2. 数据默认位于`./resource/data.json`，可通过设置`env`下`WHAT2EAT_PATH`更改；基础菜单、群特色菜单及群友询问Bot次数会记录在该文件中；
 
