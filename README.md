@@ -37,7 +37,7 @@ v0.2.2
 
 1. 通过`pip`或`nb`，版本请指定`^0.2.2`
 
-2. 数据默认位于`./resource/data.json`，可通过设置`env`下`WHAT2EAT_PATH`更改；基础菜单、群特色菜单及群友询问Bot次数会记录在该文件中；
+2. 数据默认位于`./resource/data.json`与`./resource/greating.json`，可通过设置`env`下`WHAT2EAT_PATH`更改；基础菜单、群特色菜单及群友询问Bot次数会记录在该文件中；
 
 ## 功能
 
