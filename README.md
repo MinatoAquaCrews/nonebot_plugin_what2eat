@@ -33,6 +33,8 @@ v0.2.2
 
 ⚠ 适配nonebot2-2.0.0beta.1；适配alpha.16版本参见[alpha.16分支](https://github.com/KafCoppelia/nonebot_plugin_what2eat/tree/alpha.16)
 
+[更新日志](https://github.com/KafCoppelia/nonebot_plugin_what2eat/releases/tag/v0.2.2)
+
 ## 安装
 
 1. 通过`pip`或`nb`，版本请指定`^0.2.2`
@@ -54,6 +56,8 @@ v0.2.2
     ```python
     ["123456789", "987654321"]
     ```
+
+6. *TODO* 群发开关，增删问候语；
 
 ## 命令
 
