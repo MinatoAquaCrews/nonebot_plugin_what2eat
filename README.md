@@ -20,7 +20,7 @@ _🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
   </a>
   
   <a href="">
-    <img src="https://img.shields.io/badge/release-v0.2.1-orange">
+    <img src="https://img.shields.io/badge/release-v0.2.2-orange">
   </a>
   
 </p>
@@ -29,19 +29,19 @@ _🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
 
 ## 版本
 
-v0.2.1
+v0.2.2
 
 ⚠ 适配nonebot2-2.0.0beta.1；适配alpha.16版本参见[alpha.16分支](https://github.com/KafCoppelia/nonebot_plugin_what2eat/tree/alpha.16)
 
 ## 安装
 
-1. 通过`pip`或`nb`，版本请指定`^0.2.1`
+1. 通过`pip`或`nb`，版本请指定`^0.2.2`
 
 2. 数据默认位于`./resource/data.json`，可通过设置`env`下`WHAT2EAT_PATH`更改；基础菜单、群特色菜单及群友询问Bot次数会记录在该文件中；
 
 ## 功能
 
-1. 选择恐惧症？让Bot给你今天吃什么建议！
+1. 选择恐惧症？让Bot建议你今天吃什么！
 
 2. 每餐每个时间段询问Bot建议上限可通过`EATING_LIMIT`修改（默认6次），每日6点、11点、17点、22点（夜宵）自动刷新；
 
@@ -49,7 +49,11 @@ v0.2.1
 
 4. 各群特色菜单相互独立；各群每个时间段询问Bot建议次数独立；Bot会**综合各群特色菜单及基础菜单**给出建议；
 
-5. *TODO*：提醒按时吃饭小助手🤔；
+5. **新增** 提醒按时吃饭小助手：每天7、12、15、18、22点群发**问候语**提醒群友按时吃饭/摸鱼，`GROUPS_ID`设置需要群发的群号列表，形如：
+
+    ```python
+    ["123456789", "987654321"]
+    ```
 
 ## 命令
 

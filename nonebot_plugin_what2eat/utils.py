@@ -19,28 +19,39 @@ _EATING_LIMIT = nonebot.get_driver().config.eating_limit
 EATING_LIMIT = 6 if not _EATING_LIMIT else _EATING_LIMIT
 
 '''
-    Reserved for next version
+    需要群发问候的群组列表
 '''
+_GROUPS_ID = nonebot.get_driver().config.groups_id
+GROUPS_ID = [] if not _GROUPS_ID else _GROUPS_ID
+
 class Meals(Enum):
-    BREAKFAST   = "_breakfast"
-    LUNCH       = "_lunch"
-    DINNER      = "_dinner"
-    SNACK       = "_snack"
-    EVENING     = "_midnight_snack"
+    BREAKFAST   = "breakfast"
+    LUNCH       = "lunch"
+    SNACK       = "snack"
+    DINNER      = "dinner"
+    MIDNIGHT    = "midnight"
 
 class EatingManager:
 
-    def __init__(self, file_path: Optional[Path]):
+    def __init__(self, path: Optional[Path]):
         self._data = {}
-        if not file_path:
-            file = Path(WHAT2EAT_PATH) / "data.json"
+        self._greating = {}
+        if not path:
+            data_file = Path(WHAT2EAT_PATH) / "data.json"
+            greating_file = Path(WHAT2EAT_PATH) / "greating.json"
         else:
-            file = file_path / "data.json"
+            data_file = path / "data.json"
+            greating_file = path / "greating.json"
         
-        self.file = file
-        if file.exists():
-            with open(file, "r", encoding="utf-8") as f:
+        self.data_file = data_file
+        self.greating_file = greating_file
+        if data_file.exists():
+            with open(data_file, "r", encoding="utf-8") as f:
                 self._data = json.load(f)
+        
+        if greating_file.exists():
+            with open(greating_file, "r", encoding="utf-8") as f:
+                self._greating = json.load(f)
 
         self._init_json()
 
@@ -52,6 +63,11 @@ class EatingManager:
             self._data["group_food"] = {}
         if "eating" not in self._data.keys():
             self._data["eating"] = {}
+        
+        # 建议greating.json初始非空，即至少有一个键
+        for meal in Meals:
+            if meal.value not in self._greating.keys():
+                self._greating[meal.value] = []
     
     def _init_data(self, event: GroupMessageEvent) -> None:
         '''
@@ -195,8 +211,11 @@ class EatingManager:
         '''
             保存数据
         '''
-        with open(self.file, 'w', encoding='utf-8') as f:
+        with open(self.data_file, 'w', encoding='utf-8') as f:
             json.dump(self._data, f, ensure_ascii=False, indent=4)
+        
+        with open(self.greating_file, 'w', encoding='utf-8') as f:
+            json.dump(self._greating, f, ensure_ascii=False, indent=4)
 
     def show_menu(self, event: GroupMessageEvent, show_basic: bool) -> str:
         group_id = str(event.group_id)
@@ -217,44 +236,36 @@ class EatingManager:
         else:
             return msg if len(msg) > 0 else "没有群特色菜单，请[添加 菜名]🤤"
         
-    def eating_tips(self, meal: Meals) -> str:
-        if meal == Meals.BREAKFAST:
-            msg = random.choice(
-                [
-                    "7点啦，吃早餐啦！",
-                    "一日之计在于晨，懒狗还不起床？"
-                ]
-            )
-        elif meal == Meals.LUNCH:
-            msg = random.choice(
-                [
-                    "12点啦，吃午餐啦！",
-                    "中午还不恰点好的？整点碳水大餐嗯造吧！"
-                ]
-            )
-        elif meal == Meals.SNACK:
-            msg = random.choice(
-                [
-                    "三点了，饮茶了先！",
-                    "摸鱼时刻，整点恰滴先~"
-                ]
-            )
-        elif meal == Meals.DINNER:
-            msg = random.choice(
-                [
-                    "6点了！不会真有人晚上加班恰外卖吧？",
-                    "下班咯，这不开造？"
-                ]
-            )
-        elif meal == Meals.EVENING:
-            msg = random.choice(
-                [
-                    "10点啦，加顿夜宵吧！",
-                    "夜宵这不来个外卖？"
-                ]
-            )
-        
-        return msg
+    '''
+        干饭/摸鱼小助手，获取问候语，可能问候语为空返回None
+        负责群发早餐、午餐、下午茶、晚餐、夜宵问候语
+    '''
+    def get2greating(self, meal: Meals) -> Optional[str]:
+        if len(self._greating.get(meal.value)) > 0:
+            greatings = self._greating[meal.value]
+            return random.choice(greatings)
+        else:
+            return None
+
+    '''
+        增加问候语
+        Reserved for next version
+    '''
+    def add_greating(self, new_greating: str, meal: Meals) -> str:
+        self._greating[meal.value].append(new_greating)
+        self.save()
+
+        return f"{new_greating} 已加入 {meal.value} 问候~"
+
+    '''
+        移除问候语，通过索引移除
+        Reserved for next version
+    '''
+    def remove_greating(self, remove_index: int, meal: Meals) -> str:
+        greating = self._greating[meal.value].pop(remove_index)
+        self.save()
+
+        return f"{greating} 已从 {meal.value} 问候中移除~"
 
 
 eating_manager = EatingManager(Path(WHAT2EAT_PATH))

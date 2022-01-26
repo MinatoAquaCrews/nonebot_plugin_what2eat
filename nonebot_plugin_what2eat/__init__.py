@@ -1,12 +1,12 @@
 from nonebot import on_command, on_regex
 from nonebot.permission import SUPERUSER
-from nonebot.adapters.onebot.v11 import Bot, GROUP, GROUP_ADMIN, GROUP_OWNER, GroupMessageEvent
-from nonebot.params import State
-from nonebot.typing import T_State
+from nonebot.adapters.onebot.v11 import Bot, GROUP, GROUP_ADMIN, GROUP_OWNER, Message, GroupMessageEvent
+from nonebot.params import CommandArg
 from nonebot.log import logger
-from .utils import eating_manager
+from .utils import eating_manager, Meals, GROUPS_ID
+from nonebot import require, get_bot
 
-from nonebot import require
+greating_helper = require("nonebot_plugin_apscheduler").scheduler
 eating_helper = require("nonebot_plugin_apscheduler").scheduler
 
 what2eat = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)吃(什么|啥|点啥)", permission=GROUP, priority=15, block=True)
@@ -16,13 +16,14 @@ add_basic = on_command("加菜", permission=SUPERUSER, priority=15, block=True)
 show = on_command("菜单", aliases={"群菜单", "查看菜单"}, permission=GROUP, priority=15, block=True)
 
 @what2eat.handle()
-async def _(bot: Bot, event: GroupMessageEvent, state: T_State=State()):
+async def _(bot: Bot, event: GroupMessageEvent):
     msg = eating_manager.get2eat(event)
     await what2eat.finish(msg)
 
 @add_group.handle()
-async def _(bot: Bot, event: GroupMessageEvent, state: T_State=State()):
-    args = str(event.get_plaintext()).strip().split()
+async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    args = args.extract_plain_text().strip().split()
+    # logger.info(args)
     if not args:
         await add_group.finish("还没输入你要添加的菜品呢~")
     elif args and len(args) == 1:
@@ -37,8 +38,9 @@ async def _(bot: Bot, event: GroupMessageEvent, state: T_State=State()):
     await add_group.finish(msg)
 
 @add_basic.handle()
-async def _(bot: Bot, event: GroupMessageEvent, state: T_State=State()):
-    args = str(event.get_plaintext()).strip().split()
+async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    args = args.extract_plain_text().strip().split()
+    # logger.info(args)
     if not args:
         await add_basic.finish("还没输入你要添加的菜品呢~")
     elif args and len(args) == 1:
@@ -53,8 +55,9 @@ async def _(bot: Bot, event: GroupMessageEvent, state: T_State=State()):
     await add_basic.finish(msg)
 
 @remove_food.handle()
-async def _(bot: Bot, event: GroupMessageEvent, state: T_State=State()):
-    args = str(event.get_plaintext()).strip().split()
+async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    args = args.extract_plain_text().strip().split()
+    # logger.info(args)
     if not args:
         await remove_food.finish("还没输入你要移除的菜品呢~")
     elif args and len(args) == 1:
@@ -69,16 +72,80 @@ async def _(bot: Bot, event: GroupMessageEvent, state: T_State=State()):
     await remove_food.finish(msg)
 
 @show.handle()
-async def _(bot: Bot, event: GroupMessageEvent, state: T_State=State()):
+async def _(bot: Bot, event: GroupMessageEvent):
     '''
         show_basic: 显示基础菜单，避免菜单过长导致刷屏
     '''
     msg = eating_manager.show_menu(event, show_basic=False)
     await show.finish(msg)
 
-
 # 重置吃什么次数，包括夜宵
 @eating_helper.scheduled_job("cron", hour="6,11,17,22", minute=0)
 async def _():
     eating_manager.reset_eating()
     logger.info("今天吃什么次数已刷新")
+
+# 早餐提醒
+@greating_helper.scheduled_job("cron", hour=7, minute=0)
+async def time_for_breakfast():
+    bot = get_bot()
+    msg = eating_manager.get2greating(Meals.BREAKFAST)
+    if not GROUPS_ID:
+        pass
+    elif msg:
+        for group_id in GROUPS_ID:
+            await bot.send_group_msg(group_id=int(group_id), message=msg)
+        
+        logger.info(f"已群发早餐提醒")
+
+# 午餐提醒
+@greating_helper.scheduled_job("cron", hour=12, minute=0)
+async def time_for_lunch():
+    bot = get_bot()
+    msg = eating_manager.get2greating(Meals.LUNCH)
+    if not GROUPS_ID:
+        pass
+    elif msg:
+        for group_id in GROUPS_ID:
+            await bot.send_group_msg(group_id=int(group_id), message=msg)
+        
+        logger.info(f"已群发午餐提醒")
+
+# 下午茶/摸鱼提醒
+@greating_helper.scheduled_job("cron", hour=15, minute=0)
+async def time_for_snack():
+    bot = get_bot()
+    msg = eating_manager.get2greating(Meals.SNACK)
+    if not GROUPS_ID:
+        pass
+    elif msg:
+        for group_id in GROUPS_ID:
+            await bot.send_group_msg(group_id=int(group_id), message=msg)
+        
+        logger.info(f"已群发摸鱼提醒")
+
+# 晚餐提醒
+@greating_helper.scheduled_job("cron", hour=18, minute=0)
+async def time_for_dinner():
+    bot = get_bot()
+    msg = eating_manager.get2greating(Meals.DINNER)
+    if not GROUPS_ID:
+        pass
+    elif msg:
+        for group_id in GROUPS_ID:
+            await bot.send_group_msg(group_id=int(group_id), message=msg)
+        
+        logger.info(f"已群发晚餐提醒")
+
+# 夜宵提醒
+@greating_helper.scheduled_job("cron", hour=22, minute=0)
+async def time_for_midnight():
+    bot = get_bot()
+    msg = eating_manager.get2greating(Meals.MIDNIGHT)
+    if not GROUPS_ID:
+        pass
+    elif msg:
+        for group_id in GROUPS_ID:
+            await bot.send_group_msg(group_id=int(group_id), message=msg)
+        
+        logger.info(f"已群发夜宵提醒")
