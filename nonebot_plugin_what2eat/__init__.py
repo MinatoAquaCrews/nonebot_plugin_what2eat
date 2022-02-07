@@ -9,11 +9,29 @@ from nonebot import require, get_bot
 greating_helper = require("nonebot_plugin_apscheduler").scheduler
 eating_helper = require("nonebot_plugin_apscheduler").scheduler
 
+__what2eat_version__ = "0.2.3"
+plugin_notes = f'''
+今天吃什么 v{__what2eat_version__}
+[xx吃xx]    问bot恰什么
+[添加 xx]   添加菜品至群菜单
+[移除 xx]   从菜单移除菜品
+[加菜 xx]   添加菜品至基础菜单
+[菜单]      查看群菜单
+[基础菜单]      查看基础菜单
+[开启/关闭小助手] 开启/关闭按时吃饭小助手'''.strip()
+
+plugin_help = on_command("吃什么帮助", permission=GROUP, priority=15, block=True)
 what2eat = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)吃(什么|啥|点啥)", permission=GROUP, priority=15, block=True)
 add_group = on_command("添加", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
 remove_food = on_command("移除", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
 add_basic = on_command("加菜", permission=SUPERUSER, priority=15, block=True)
-show = on_command("菜单", aliases={"群菜单", "查看菜单"}, permission=GROUP, priority=15, block=True)
+show_group = on_command("菜单", aliases={"群菜单", "查看菜单"}, permission=GROUP, priority=15, block=True)
+show_basic = on_command("基础菜单", permission=SUPERUSER, priority=15, block=True)
+switch_greating = on_regex(r"(开启|关闭)小助手", permission=SUPERUSER, priority=15, block=True)
+
+@plugin_help.handle()
+async def _(bot: Bot):
+    await plugin_help.finish(plugin_notes)
 
 @what2eat.handle()
 async def _(bot: Bot, event: GroupMessageEvent):
@@ -23,7 +41,6 @@ async def _(bot: Bot, event: GroupMessageEvent):
 @add_group.handle()
 async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     args = args.extract_plain_text().strip().split()
-    # logger.info(args)
     if not args:
         await add_group.finish("还没输入你要添加的菜品呢~")
     elif args and len(args) == 1:
@@ -40,7 +57,6 @@ async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
 @add_basic.handle()
 async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     args = args.extract_plain_text().strip().split()
-    # logger.info(args)
     if not args:
         await add_basic.finish("还没输入你要添加的菜品呢~")
     elif args and len(args) == 1:
@@ -57,7 +73,6 @@ async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
 @remove_food.handle()
 async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     args = args.extract_plain_text().strip().split()
-    # logger.info(args)
     if not args:
         await remove_food.finish("还没输入你要移除的菜品呢~")
     elif args and len(args) == 1:
@@ -71,13 +86,27 @@ async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
 
     await remove_food.finish(msg)
 
-@show.handle()
+@show_group.handle()
 async def _(bot: Bot, event: GroupMessageEvent):
-    '''
-        show_basic: 显示基础菜单，避免菜单过长导致刷屏
-    '''
-    msg = eating_manager.show_menu(event, show_basic=False)
-    await show.finish(msg)
+    msg = eating_manager.show_group_menu(event)
+    await show_group.finish(msg)
+
+@show_basic.handle()
+async def _(bot: Bot, event: GroupMessageEvent):
+    msg = eating_manager.show_basic_menu()
+    await show_basic.finish(msg)
+
+@switch_greating.handle()
+async def _(bot: Bot, event: GroupMessageEvent):
+    args = event.get_plaintext()
+    if args[:2] == "开启":
+        greating_helper.resume()
+        msg = f"已开启按时吃饭小助手~"
+    elif args[:2] == "关闭":
+        greating_helper.pause()
+        msg = f"已关闭按时吃饭小助手~"
+
+    await switch_greating.finish(msg)
 
 # 重置吃什么次数，包括夜宵
 @eating_helper.scheduled_job("cron", hour="6,11,17,22", minute=0)
