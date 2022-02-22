@@ -1,5 +1,6 @@
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
 import nonebot
+from nonebot import logger
 import random
 import os
 from pathlib import Path
@@ -12,10 +13,15 @@ except ModuleNotFoundError:
     import json
 
 global_config = nonebot.get_driver().config
-if not hasattr(global_config, "use_preset"):
-    USE_PRESET = False
+if not hasattr(global_config, "use_preset_menu"):
+    USE_PRESET_MENU = False
 else:
-    USE_PRESET = True
+    USE_PRESET_MENU = nonebot.get_driver().config.use_preset_menu
+
+if not hasattr(global_config, "use_preset_greating"):
+    USE_PRESET_GREATING = False
+else:
+    USE_PRESET_GREATING = nonebot.get_driver().config.use_preset_greating
 
 if not hasattr(global_config, "superusers"):
     raise Exception("Superusers should not be null!")
@@ -63,8 +69,9 @@ class EatingManager:
         self.data_file = data_file
         self.greating_file = greating_file
         if not data_file.exists():
-            if USE_PRESET:
-                await get_preset(data_file)
+            if USE_PRESET_MENU:
+                logger.info("Downloading preset what2eat menu resource...")
+                get_preset(data_file, "MENU")
             else:
                 with open(data_file, "w", encoding="utf-8") as f:
                     f.write(json.dumps(dict()))
@@ -75,9 +82,13 @@ class EatingManager:
                 self._data = json.load(f)
         
         if not greating_file.exists():
-            with open(greating_file, "w", encoding="utf-8") as f:
-                f.write(json.dumps(dict()))
-                f.close()
+            if USE_PRESET_GREATING:
+                logger.info("Downloading preset what2eat greating resource...")
+                get_preset(greating_file, "GREATING")
+            else:
+                with open(greating_file, "w", encoding="utf-8") as f:
+                    f.write(json.dumps(dict()))
+                    f.close()
 
         if greating_file.exists():
             with open(greating_file, "r", encoding="utf-8") as f:

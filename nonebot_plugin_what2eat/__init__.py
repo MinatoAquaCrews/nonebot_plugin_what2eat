@@ -9,7 +9,7 @@ from nonebot import require, get_bot
 greating_helper = require("nonebot_plugin_apscheduler").scheduler
 eating_helper = require("nonebot_plugin_apscheduler").scheduler
 
-__what2eat_version__ = "v0.2.4"
+__what2eat_version__ = "v0.2.5"
 plugin_notes = f'''
 今天吃什么 {__what2eat_version__}
 [xx吃xx]    问bot恰什么
