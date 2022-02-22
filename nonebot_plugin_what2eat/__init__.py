@@ -9,9 +9,9 @@ from nonebot import require, get_bot
 greating_helper = require("nonebot_plugin_apscheduler").scheduler
 eating_helper = require("nonebot_plugin_apscheduler").scheduler
 
-__what2eat_version__ = "0.2.3"
+__what2eat_version__ = "v0.2.4"
 plugin_notes = f'''
-今天吃什么 v{__what2eat_version__}
+今天吃什么 {__what2eat_version__}
 [xx吃xx]    问bot恰什么
 [添加 xx]   添加菜品至群菜单
 [移除 xx]   从菜单移除菜品
@@ -20,7 +20,7 @@ plugin_notes = f'''
 [基础菜单]      查看基础菜单
 [开启/关闭小助手] 开启/关闭按时吃饭小助手'''.strip()
 
-plugin_help = on_command("吃什么帮助", permission=GROUP, priority=15, block=True)
+plugin_help = on_command("今天吃什么帮助", permission=GROUP, priority=15, block=True)
 what2eat = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)吃(什么|啥|点啥)", permission=GROUP, priority=15, block=True)
 add_group = on_command("添加", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
 remove_food = on_command("移除", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)

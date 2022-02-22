@@ -5,24 +5,40 @@ import os
 from pathlib import Path
 from typing import Optional
 from enum import Enum
-
+from .download import get_preset
 try:
     import ujson as json
 except ModuleNotFoundError:
     import json
 
-SUPERUSERS = nonebot.get_driver().config.superusers
-_WHAT2EAT_PATH = nonebot.get_driver().config.what2eat_path
-DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "resource")
-WHAT2EAT_PATH = DEFAULT_PATH if not _WHAT2EAT_PATH else _WHAT2EAT_PATH
-_EATING_LIMIT = nonebot.get_driver().config.eating_limit
-EATING_LIMIT = 6 if not _EATING_LIMIT else _EATING_LIMIT
+global_config = nonebot.get_driver().config
+if not hasattr(global_config, "use_preset"):
+    USE_PRESET = False
+else:
+    USE_PRESET = True
+
+if not hasattr(global_config, "superusers"):
+    raise Exception("Superusers should not be null!")
+else:
+    SUPERUSERS = nonebot.get_driver().config.superusers
+
+if not hasattr(global_config, "what2eat_path"):
+    WHAT2EAT_PATH = os.path.join(os.path.dirname(__file__), "resource")
+else:
+    WHAT2EAT_PATH = nonebot.get_driver().config.what2eat_path
+
+if not hasattr(global_config, "eating_limit"):
+    EATING_LIMIT = nonebot.get_driver().config.eating_limit
+else:
+    EATING_LIMIT = 5
 
 '''
     需要群发问候的群组列表
 '''
-_GROUPS_ID = nonebot.get_driver().config.groups_id
-GROUPS_ID = [] if not _GROUPS_ID else _GROUPS_ID
+if not hasattr(global_config, "groups_id"):
+    GROUPS_ID = nonebot.get_driver().config.groups_id
+else:
+    GROUPS_ID = []
 
 class Meals(Enum):
     BREAKFAST   = "breakfast"
@@ -34,7 +50,7 @@ class Meals(Enum):
 class EatingManager:
 
     def __init__(self, path: Optional[Path]):
-        self.greating_enbale = True     # 群聊按时吃饭提醒开关
+        self.greating_enbale = True
         self._data = {}
         self._greating = {}
         if not path:
@@ -47,9 +63,12 @@ class EatingManager:
         self.data_file = data_file
         self.greating_file = greating_file
         if not data_file.exists():
-            with open(data_file, "w", encoding="utf-8") as f:
-                f.write(json.dumps(dict()))
-                f.close()
+            if USE_PRESET:
+                await get_preset(data_file)
+            else:
+                with open(data_file, "w", encoding="utf-8") as f:
+                    f.write(json.dumps(dict()))
+                    f.close()
 
         if data_file.exists():
             with open(data_file, "r", encoding="utf-8") as f:

@@ -16,11 +16,11 @@ _🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
   </a>
   
   <a href="https://github.com/nonebot/nonebot2">
-    <img src="https://img.shields.io/badge/nonebot2-2.0.0beta.1-green">
+    <img src="https://img.shields.io/badge/nonebot2-2.0.0beta.1+-green">
   </a>
   
   <a href="">
-    <img src="https://img.shields.io/badge/release-v0.2.3-orange">
+    <img src="https://img.shields.io/badge/release-v0.2.4-orange">
   </a>
   
 </p>
@@ -29,27 +29,29 @@ _🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
 
 ## 版本
 
-v0.2.3
+v0.2.4
 
-⚠ 适配nonebot2-2.0.0beta.1；适配alpha.16版本参见[alpha.16分支](https://github.com/KafCoppelia/nonebot_plugin_what2eat/tree/alpha.16)
+⚠ 适配nonebot2-2.0.0beta.1+；
 
-[更新日志](https://github.com/KafCoppelia/nonebot_plugin_what2eat/releases/tag/v0.2.3)
+👉 适配alpha.16版本参见[alpha.16分支](https://github.com/KafCoppelia/nonebot_plugin_what2eat/tree/alpha.16)
+
+[更新日志](https://github.com/KafCoppelia/nonebot_plugin_what2eat/releases/tag/v0.2.4)
 
 ## 安装
 
-1. 通过`pip`或`nb`，版本请指定`^0.2.3`
+1. 通过`pip`或`nb`，版本请指定`0.2.4`；
 
-2. 数据默认位于`./resource/data.json`与`./resource/greating.json`，可通过设置`env`下`WHAT2EAT_PATH`更改；基础菜单、群特色菜单及群友询问Bot次数会记录在该文件中；
+2. 数据默认位于`./resource`下`data.json`与`greating.json`，可通过设置`env`下`WHAT2EAT_PATH`更改；基础菜单、群特色菜单及群友询问Bot次数会记录在该文件中；
 
 ## 功能
 
 1. 选择恐惧症？让Bot建议你今天吃什么！
 
-2. 每餐每个时间段询问Bot建议上限可通过`EATING_LIMIT`修改（默认6次），每日6点、11点、17点、22点（夜宵）自动刷新；
+2. 每餐每个时间段询问Bot建议上限可通过`EATING_LIMIT`修改（默认5次），每日6点、11点、17点、22点（夜宵）自动刷新；
 
 3. 群管理可自行添加或移除群特色菜单（`data.json`下`[group_food][group_id]`）；超管可添加或移除基础菜单（`[basic_food]`）；
 
-4. 各群特色菜单相互独立；各群每个时间段询问Bot建议次数独立；Bot会综合各群菜单+基础菜单给出建议；
+4. 各群特色菜单相互独立；各群每个时间段询问Bot建议次数独立；Bot会综合各群菜单+基础菜单给出建议；查看群菜单与基础菜单命令分立；
 
 5. 提醒按时吃饭小助手：每天7、12、15、18、22点群发**问候语**提醒群友按时吃饭/摸鱼，`GROUPS_ID`设置需要群发的群号列表，形如：
 
@@ -57,13 +59,13 @@ v0.2.3
     ["123456789", "987654321"]
     ```
 
-6. **新增** 按时吃饭小助手全局开关；
+6. 按时吃饭小助手全局开关；
 
-7. **新增** 查看群菜单与基础菜单命令分立；
+7. 吃什么帮助文案；
 
-8. **新增** 吃什么帮助文案；
+8. **新增** 更多的预置基础菜单，精选家常菜及八大菜系（未经核实）；
 
-9. **更新** 更新了预置基础菜单~~不想要可以移除~~；
+9. **新增** 初次使用该插件时，若不存在`data.json`与`greating.json`，设置`USE_PRESET_MENU`及`USE_PRESET_GREATING`可获取仓库中最新的预置菜单及问候语；若存在`data.json`与`greating.json`，则对应参数不会生效。
 
 ## 命令
 
@@ -122,3 +124,5 @@ v0.2.3
 ## 本插件改自：
 
 [HoshinoBot-whattoeat](https://github.com/pcrbot/whattoeat)
+
+部分菜名参考[程序员做饭指南](https://github.com/Anduin2017/HowToCook)
