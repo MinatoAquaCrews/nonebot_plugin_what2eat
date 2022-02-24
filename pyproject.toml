@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_what2eat"
-version = "0.2.5"
+version = "0.2.6"
 description = "What to eat today for your breakfast, lunch, dinner and even midnight snack!"
 authors = ["KafCoppelia <k740677208@gmail.com>"]
 license = "MIT"
@@ -9,9 +9,10 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.7.3"
 ujson = "^5.1.0"
-nonebot2 = "^2.0.0-beta.1"
+nonebot2 = "^2.0.0-beta.2"
 nonebot-adapter-onebot = "^2.0.0-beta.1"
 nonebot-plugin-apscheduler = "^0.1.2"
+requests = "^2.27.1"
 
 [tool.poetry.dev-dependencies]
 

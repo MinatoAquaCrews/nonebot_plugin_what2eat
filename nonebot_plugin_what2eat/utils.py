@@ -1,50 +1,19 @@
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
-import nonebot
 from nonebot import logger
+import nonebot
 import random
-import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 from .download import get_preset
+from .config import PluginConfig
 try:
     import ujson as json
 except ModuleNotFoundError:
     import json
 
 global_config = nonebot.get_driver().config
-if not hasattr(global_config, "use_preset_menu"):
-    USE_PRESET_MENU = False
-else:
-    USE_PRESET_MENU = nonebot.get_driver().config.use_preset_menu
-
-if not hasattr(global_config, "use_preset_greating"):
-    USE_PRESET_GREATING = False
-else:
-    USE_PRESET_GREATING = nonebot.get_driver().config.use_preset_greating
-
-if not hasattr(global_config, "superusers"):
-    raise Exception("Superusers should not be null!")
-else:
-    SUPERUSERS = nonebot.get_driver().config.superusers
-
-if not hasattr(global_config, "what2eat_path"):
-    WHAT2EAT_PATH = os.path.join(os.path.dirname(__file__), "resource")
-else:
-    WHAT2EAT_PATH = nonebot.get_driver().config.what2eat_path
-
-if not hasattr(global_config, "eating_limit"):
-    EATING_LIMIT = nonebot.get_driver().config.eating_limit
-else:
-    EATING_LIMIT = 5
-
-'''
-    需要群发问候的群组列表
-'''
-if not hasattr(global_config, "groups_id"):
-    GROUPS_ID = nonebot.get_driver().config.groups_id
-else:
-    GROUPS_ID = []
+config: PluginConfig = PluginConfig.parse_obj(global_config.dict())
 
 class Meals(Enum):
     BREAKFAST   = "breakfast"
@@ -60,8 +29,8 @@ class EatingManager:
         self._data = {}
         self._greating = {}
         if not path:
-            data_file = Path(WHAT2EAT_PATH) / "data.json"
-            greating_file = Path(WHAT2EAT_PATH) / "greating.json"
+            data_file = Path(config.what2eat_path) / "data.json"
+            greating_file = Path(config.what2eat_path) / "greating.json"
         else:
             data_file = path / "data.json"
             greating_file = path / "greating.json"
@@ -69,7 +38,7 @@ class EatingManager:
         self.data_file = data_file
         self.greating_file = greating_file
         if not data_file.exists():
-            if USE_PRESET_MENU:
+            if config.use_preset_menu:
                 logger.info("Downloading preset what2eat menu resource...")
                 get_preset(data_file, "MENU")
             else:
@@ -82,7 +51,7 @@ class EatingManager:
                 self._data = json.load(f)
         
         if not greating_file.exists():
-            if USE_PRESET_GREATING:
+            if config.use_preset_greating:
                 logger.info("Downloading preset what2eat greating resource...")
                 get_preset(greating_file, "GREATING")
             else:
@@ -175,7 +144,7 @@ class EatingManager:
     def eating_check(self, event: GroupMessageEvent) -> bool:
         user_id = str(event.user_id)
         group_id = str(event.group_id)
-        return False if self._data["eating"][group_id][user_id] >= EATING_LIMIT else True
+        return False if self._data["eating"][group_id][user_id] >= config.eating_limit else True
 
     '''
         添加至群菜单中 GROUP_ADMIN | GROUP_OWNER 权限
@@ -229,7 +198,7 @@ class EatingManager:
             return f"{food_to_remove} 已从群菜单中删除~"
         # 在基础菜单
         else:
-            if user_id not in SUPERUSERS:
+            if user_id not in config.superusers:
                 return f"{food_to_remove} 在基础菜单中，非超管不可操作哦~"
             else:
                 self._data["basic_food"].remove(food_to_remove)
@@ -290,22 +259,49 @@ class EatingManager:
             return None
 
     '''
-        Reserved for next version
+        添加某一时段问候语
     '''
-    def add_greating(self, new_greating: str, meal: Meals) -> str:
-        self._greating[meal.value].append(new_greating)
+    def add_greating(self, args: List) -> str:
+        if args[0] == "早餐":
+            meal = Meals.BREAKFAST.value
+        elif args[0] == "中餐":
+            meal = Meals.LUNCH.value
+        elif args[0] == "摸鱼" or args[0] == "饮茶":
+            meal = Meals.SNACK.value
+        elif args[0] == "晚餐":
+            meal = Meals.DINNER.value
+        elif args[0] == "夜宵":
+            meal = Meals.MIDNIGHT.value
+        else:
+            return f"请检查输入参数{args[0]}是否正确~"
+            
+        greating = args[1]
+        self._greating[meal].append(greating)
         self.save()
 
-        return f"{new_greating} 已加入 {meal.value} 问候~"
+        return f"{greating} 已加入 {args[0]} 问候~"
 
     '''
-        Reserved for next version
+        删除某一时段最新的问候语
     '''
-    def remove_greating(self, remove_index: int, meal: Meals) -> str:
-        greating = self._greating[meal.value].pop(remove_index)
+    def remove_greating(self, arg: str) -> str:
+        if arg == "早餐":
+            meal = Meals.BREAKFAST.value
+        elif arg == "中餐":
+            meal = Meals.LUNCH.value
+        elif arg == "摸鱼" or arg == "饮茶":
+            meal = Meals.SNACK.value
+        elif arg == "晚餐":
+            meal = Meals.DINNER.value
+        elif arg == "夜宵":
+            meal = Meals.MIDNIGHT.value
+        else:
+            return f"请检查输入参数{arg}是否正确~"
+        
+        greating = self._greating[meal].pop()
         self.save()
 
-        return f"{greating} 已从 {meal.value} 问候中移除~"
+        return f"{greating} 已从 {arg} 问候中移除~"
 
 
-eating_manager = EatingManager(Path(WHAT2EAT_PATH))
+eating_manager = EatingManager(Path(config.what2eat_path))

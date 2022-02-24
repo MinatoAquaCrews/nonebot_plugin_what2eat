@@ -10,9 +10,9 @@ class DownloadError(Exception):
 
 def get_preset(file_path: Path, file_type: str) -> None:
     if file_type == "MENU":
-        url = f"https://cdn.jsdelivr.net/gh/KafCoppelia/nonebot_plugin_what2eat@beta.1/nonebot_plugin_what2eat/resource/data.json"
+        url = f"https://cdn.jsdelivr.net/gh/KafCoppelia/nonebot_plugin_what2eat@beta/nonebot_plugin_what2eat/resource/data.json"
     elif file_type == "GREATING":
-        url = f"https://cdn.jsdelivr.net/gh/KafCoppelia/nonebot_plugin_what2eat@beta.1/nonebot_plugin_what2eat/resource/greating.json"
+        url = f"https://cdn.jsdelivr.net/gh/KafCoppelia/nonebot_plugin_what2eat@beta/nonebot_plugin_what2eat/resource/greating.json"
     
     data = requests.get(url).json()
     if data:
