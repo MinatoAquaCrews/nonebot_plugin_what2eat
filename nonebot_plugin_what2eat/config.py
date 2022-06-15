@@ -5,6 +5,7 @@ from typing import List, Dict, Set, Union, Any
 import httpx
 from nonebot import get_driver
 from nonebot import logger
+from pydantic.errors import PathError
 try:
     import ujson as json
 except ModuleNotFoundError:
@@ -12,18 +13,18 @@ except ModuleNotFoundError:
 
 class PluginConfig(BaseModel, extra=Extra.ignore):
     what2eat_path: Path = Path(__file__).parent / "resource"
-    use_preset_menu: bool = True
-    use_preset_greetings: bool = True
+    use_preset_menu: bool = False
+    use_preset_greetings: bool = False
     eating_limit: int = 5
-    greeting_groups_id: Set[str] = set() # e.g. {"123456", "654321"} or ["123456", "654321"]
+    greeting_groups_id: Set[str] = set()
     superusers : Set[str] = set()
     
 class Meals(Enum):
-    BREAKFAST = "breakfast"
-    LUNCH = "lunch"
-    SNACK = "snack"
-    DINNER = "dinner"
-    MIDNIGHT = "midnight"
+    BREAKFAST = ["breakfast", "早餐", "早饭"]
+    LUNCH = ["lunch", "午餐", "午饭", "中餐"]
+    SNACK = ["snack", "摸鱼", "下午茶", "饮茶"]
+    DINNER = ["dinner", "晚餐", "晚饭"]
+    MIDNIGHT = ["midnight", "夜宵", "宵夜"]
     
 driver = get_driver()
 what2eat_config: PluginConfig = PluginConfig.parse_obj(driver.config.dict())
@@ -54,6 +55,9 @@ def save_json(_file: Path, _data: Any) -> None:
         json.dump(_data, f, ensure_ascii=False, indent=4)
         
 def write_init_keys(_file: Path, _name: str) -> None:
+    '''
+        Write ALL the initial keys
+    '''
     _data = {}
     if _name == "eating.json":
         _data["basic_food"] = []
@@ -63,13 +67,15 @@ def write_init_keys(_file: Path, _name: str) -> None:
     else:
         for meal in Meals:
             if meal not in _data:
-                _data[meal] = []
+                _data[meal.value[0]] = []
         
         _data["groups_id"] = {}
         save_json(_file, _data)
                
-async def download_file(_url: str, _file: Path, _name: str) -> None:
+async def download_file(_file: Path, _name: str) -> None:
+    _url = "https://raw.fastgit.org/MinatoAquaCrews/nonebot_plugin_what2eat/beta/nonebot_plugin_what2eat/resource/"
     url = _url + _name
+    
     resp = await download_url(url)
     if resp is None:
         # Write initial keys in file when download failed
@@ -79,6 +85,40 @@ async def download_file(_url: str, _file: Path, _name: str) -> None:
         save_json(_file, resp)
         logger.info(f"Get file {_name} from repo")
         
+def compatible_with_v02x(new_eating_json: Path, new_greeting_json: Path) -> None:
+    '''
+        v0.3.0 is compatible with configure json file of version 0.2.x, but will be deprecated in next version
+        Rename old file(data.json) to eating.json, greating.json(that's a wrong word) to greetings.json
+        Replace old keys(eating) with new keys(count)
+    '''
+    logger.warning("v0.3.0 is compatible with configure json file of version 0.2.x, but will be deprecated in next version")
+    
+    old_data_json: Path = what2eat_config.what2eat_path / "data.json"
+    
+    if not old_data_json.exists():
+        logger.info(f"Old data.json doesn't exist, ignored: {old_data_json}")
+    else:
+        # Rename
+        res = old_data_json.rename(new_eating_json)
+        if not res.exists():
+            raise PathError
+        else:
+            with new_eating_json.open("r", encoding="utf-8") as f:
+                _f: Dict[str, Union[List[str], Dict[str, Union[Dict[str, List[int]], List[str]]]]] = json.load(f)
+                _f["count"] = _f.pop("eating")
+            
+            save_json(new_eating_json, _f)
+    
+    old_greating_json: Path = what2eat_config.what2eat_path / "greating.json"
+    
+    if not old_greating_json.exists():
+        logger.info(f"Old greating.json doesn't exist, ignored: {old_greating_json}")
+    else:
+        # Rename
+        res = old_greating_json.rename(new_greeting_json)
+        if not res.exists():
+            raise PathError
+        
 @driver.on_startup
 async def what2eat_check() -> None:
     '''
@@ -87,51 +127,67 @@ async def what2eat_check() -> None:
     '''
     if not what2eat_config.what2eat_path.exists():
         what2eat_config.what2eat_path.mkdir(parents=True, exist_ok=True)
-
-    _url = "https://raw.fastgit.org/MinatoAquaCrews/nonebot_plugin_what2eat/beta/nonebot_plugin_what2eat/resource/"
+    
+    eating_json: Path = what2eat_config.what2eat_path / "eating.json"
+    greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
+    
+    compatible_with_v02x(eating_json, greetings_json)
     
     '''
         If eating.json doesn't exist or eating.json exists but f.get["basic_food"] doesn't exist and USE_PRESET_MENU is True, download
         If USE_PRESET_MENU is False, break
     '''
-    eating_json_path: Path = what2eat_config.what2eat_path / "eating.json"
-    
     if what2eat_config.use_preset_menu:
-        if not eating_json_path.exists():
-            await download_file(_url, eating_json_path, "eating.json")
+        if not eating_json.exists():
+            await download_file(eating_json, "eating.json")
         else:
-            with eating_json_path.open("r", encoding="utf-8") as f:
+            # Exists then check the keys
+            with eating_json.open("r", encoding="utf-8") as f:
                 _f: Dict[str, Union[List[str], Dict[str, Union[Dict[str, List[int]], List[str]]]]] = json.load(f)
                 if not _f.get("basic_food", False):
-                    await download_file(_url, eating_json_path, "eating.json")
+                    _f.update({"basic_food", []})
+                
+                if not _f.get("group_food", False):
+                    _f.update({"group_food", {}})
+                    
+                if not _f.get("count", False):
+                    _f.update({"count", {}})
+                
+            save_json(eating_json, _f)
     
     '''
         If greetings.json doesn't exist or greetings.json exists but ... ALL doesn't exist and USE_PRESET_greetings is True, download
         If USE_PRESET_greetings is False, break
     '''
-    greetings_json_path: Path = what2eat_config.what2eat_path / "greetings.json"
-    
     if what2eat_config.use_preset_greetings:
-        if not greetings_json_path.exists():
-            await download_file(_url, greetings_json_path, "greetings.json")    
+        if not greetings_json.exists():
+            await download_file(greetings_json, "greetings.json")    
         else:
-            with greetings_json_path.open("r", encoding="utf-8") as f:
+            # Exists then check the keys
+            with greetings_json.open("r", encoding="utf-8") as f:
                 _f: Dict[str, Union[List[str], Dict[str, bool]]] = json.load(f)
-                if not _f.get("breakfast", False) or not _f.get("lunch", False) or \
-                    not _f.get("snack", False) or not _f.get("dinner", False) or \
-                        not _f.get("midnight", False):
-                    await download_file(_url, greetings_json_path, "greetings.json")    
+                for meal in Meals:
+                    if _f.get(meal.value[0], False):
+                        _f.update({meal.value[0], []})
+                
+                if not _f.get("groups_id", False):
+                    _f["groups_id"] = {}
+            
+            save_json(greetings_json, _f)
     
     # Save groups id in greetings.json if len > 0
     if len(what2eat_config.greeting_groups_id) > 0:
-        with greetings_json_path.open("r", encoding="utf-8") as f:
+        with greetings_json.open("r", encoding="utf-8") as f:
             _f: Dict[str, Union[List[str], Dict[str, bool]]] = json.load(f)
             
-            # Update the default groups
+            # Update the default groups    
+            if not _f.get("groups_id", False):
+                _f["groups_id"] = {}
+                        
             for gid in what2eat_config.greeting_groups_id:
                 _f["groups_id"].update({gid: True})
-                
-            json.dump(_f, f, ensure_ascii=False, indent=4)
+        
+        save_json(greetings_json, _f)
 
 __all__ = [
     Meals, what2eat_config

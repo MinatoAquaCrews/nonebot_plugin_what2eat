@@ -6,13 +6,14 @@ from nonebot.adapters.onebot.v11 import GROUP, GROUP_ADMIN, GROUP_OWNER, Message
 from nonebot.params import Depends, Arg, ArgStr, CommandArg, RegexMatched
 from nonebot.matcher import Matcher
 from nonebot.log import logger
-from .data_source import eating_manager, Meals
 from nonebot import require, get_bot
+from .config import Meals
+from .data_source import eating_manager
 
 greeting_helper = require("nonebot_plugin_apscheduler").scheduler
 eating_helper = require("nonebot_plugin_apscheduler").scheduler
 
-__what2eat_version__ = "v0.3.0a1"
+__what2eat_version__ = "v0.3.0a2"
 __what2eat_notes__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot恰什么
@@ -20,7 +21,7 @@ __what2eat_notes__ = f'''
 [移除 xx]   从菜单移除菜品
 [加菜 xx]   添加菜品至基础菜单
 [菜单]      查看群菜单
-[基础菜单] 查看基础菜单
+[基础菜单]   查看基础菜单
 [开启/关闭小助手] 开启/关闭吃饭小助手
 [添加/删除问候 问候语] 添加/删除吃饭小助手问候语'''.strip()
 
@@ -38,8 +39,6 @@ remove_greeting = on_command("删除问候", aliases={"删除问候语", "移除
 
 @what2eat.handle()
 async def _(event: MessageEvent, args: str = RegexMatched()):
-    # check here
-    logger.info(f"Get args: {args}")
     if args[-2:] == "帮助":
         await what2eat.finish(__what2eat_notes__)
     
@@ -99,7 +98,6 @@ async def _(matcher: Matcher):
     msg = eating_manager.show_basic_menu()
     await matcher.finish(msg)
 
-
 # ------------------------- Greetings -------------------------
 @greeting_on.handle()
 async def _(event: GroupMessageEvent):
@@ -113,38 +111,48 @@ async def _(event: GroupMessageEvent):
     eating_manager.update_groups_on(gid, False)
     await greeting_off.finish("已关闭吃饭小助手~")
 
-def parse_greeting(key: str) -> None:
+def parse_greeting() -> Coroutine[Any, Any, None]:
     '''
         Parser the greeting input from user then store in state["greeting"]
     '''
-    def _greeting_parser(state: T_State, input_arg: Message = Arg(key)) -> None:
-        state["greeting"] = input_arg
+    async def _greeting_parser(matcher: Matcher, state: T_State, input_arg: Message = Arg("greeting")) -> None:
+        if input_arg.extract_plain_text() == "取消":
+            await matcher.finish("操作已取消")
+        else:
+            state["greeting"] = input_arg
     
     return _greeting_parser
 
-def parse_meal(key: str) -> Coroutine[Any, Any, None]:
+def parse_meal() -> Coroutine[Any, Any, None]:
     '''
-        Parser the meal input from user then store in state["meal"]
-        If illigal, reject it
+        Parser the meal input from user then store in state["meal"]. If illigal, reject it
     '''
-    async def _meal_parser(matcher: Matcher, state: T_State, input_arg: Message = ArgStr(key)) -> None:
+    async def _meal_parser(matcher: Matcher, state: T_State, input_arg: str = ArgStr("meal")) -> None:
+        if input_arg == "取消":
+            await matcher.finish("操作已取消")
+            
         res = eating_manager.which_meals(input_arg)
         if res is None:
-            await matcher.reject_arg(key, "输入时段不合法")
+            await matcher.reject_arg("meal", "输入时段不合法")
         else:
             state["meal"] = res
     
     return _meal_parser
 
-def parse_index(key: str) -> None:
+def parse_index() -> None:
     '''
         Parser the index of greeting to be removed input from user then store in state["index"]
     '''
-    async def _index_parser(matcher: Matcher, state: T_State, input_arg: Message = ArgStr(key)) -> None:
+    async def _index_parser(matcher: Matcher, state: T_State, input_arg: str = ArgStr("index")) -> None:
         try:
-            state["index"] = int(input_arg)
-        except Exception:
-            await matcher.reject_arg(key, "输入序号不合法")
+            arg2int = int(input_arg)
+        except ValueError:
+            await matcher.reject_arg("index", "输入序号不合法")
+        
+        if arg2int == 0:
+            await matcher.finish("操作已取消")
+        else:
+            state["index"] = arg2int
     
     return _index_parser
         
@@ -165,41 +173,44 @@ async def _(matcher: Matcher, args: Message = CommandArg()):
         res = eating_manager.which_meals(args[0])
         if isinstance(res, Meals):
             matcher.set_arg("meal", args[0])
-            msg = eating_manager.show_greetings(res)
-            await matcher.send(msg)
     
 @add_greeting.got(
     "meal",
-    prompt="请输入添加问候语的时段，可选：早餐/午餐/摸鱼/晚餐/夜宵",
-    parameterless=[Depends(parse_meal("meal"))]
+    prompt="请输入添加问候语的时段，可选：早餐/午餐/摸鱼/晚餐/夜宵，输入取消以取消操作",
+    parameterless=[Depends(parse_meal())]
 )
+async def handle_skip():
+    add_greeting.skip()
+
 @add_greeting.got(
-    "greeting",
-    prompt="请输入添加的问候语",
-    parameterless=[Depends(parse_greeting("greeting"))]
+    "greeting", 
+    prompt="请输入添加的问候语，输入取消以取消操作",
+    parameterless=[Depends(parse_greeting())]
 )
-async def handle_add_greeting(matcher: Matcher, meal: Meals = ArgStr(), greeting: str = Arg()):
-    msg = eating_manager.add_greeting(meal, greeting)
-    await matcher.finish(msg)
+async def handle_add_greeting(state: T_State, greeting: Message = Arg()):
+    meal = state["meal"]
+    # Not support for text + image greeting, just extract the plain text
+    msg = eating_manager.add_greeting(meal, greeting.extract_plain_text())
+    await add_greeting.finish(msg)
 
 @remove_greeting.got(
     "meal",
-    prompt="请输入删除问候语的时段，可选：早餐/午餐/摸鱼/晚餐/夜宵",
-    parameterless=[Depends(parse_meal("meal"))]
+    prompt="请输入删除问候语的时段，可选：早餐/午餐/摸鱼/晚餐/夜宵，输入取消以取消操作",
+    parameterless=[Depends(parse_meal())]
 )
-async def get_meal_show_greetings(matcher: Matcher, meal: Meals = ArgStr()):
+async def handle_show_greetings(meal: Meals = Arg()):
     msg = eating_manager.show_greetings(meal)
-    await matcher.send(msg)
+    await remove_greeting.send(msg)
     
 @remove_greeting.got(
     "index",
-    prompt="请输入删除的问候语序号",
-    parameterless=[Depends(parse_index("index"))]
+    prompt="请输入删除的问候语序号，输入0以取消操作",
+    parameterless=[Depends(parse_index())]
 )
-async def handle_remove_greeting(matcher: Matcher, meal: Meals = ArgStr(), index: int = ArgStr()):
+async def handle_remove_greeting(state: T_State, index: int = Arg()):
+    meal = state["meal"]
     msg = eating_manager.remove_greeting(meal, index)
-    await matcher.finish(msg)
-
+    await remove_greeting.finish(msg)
 
 # ------------------------- Schedulers -------------------------
 # 重置吃什么次数，包括夜宵

@@ -16,21 +16,26 @@ class FoodLoc(Enum):
 
 class EatingManager:
     def __init__(self):
+        self._init_ok: bool = False
         self._eating: Dict[str, Union[List[str], Dict[str, Union[Dict[str, List[int]], List[str]]]]] = {}
         self._greetings: Dict[str, Union[List[str], Dict[str, bool]]] = {}
         
-        _eating_json: Path = what2eat_config.what2eat_path / "eating.json"
-        with open(_eating_json, 'r', encoding='utf-8') as f:
+    def _init_json(self):
+        self._init_ok = True
+        self._eating_json: Path = what2eat_config.what2eat_path / "eating.json"
+        with open(self._eating_json, 'r', encoding='utf-8') as f:
             self._eating = json.load(f)
             
-        _greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
-        with open(_greetings_json, 'r', encoding='utf-8') as f:
+        self._greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
+        with open(self._greetings_json, 'r', encoding='utf-8') as f:
             self._greetings = json.load(f)
     
     def _init_data(self, gid: str, uid: str) -> None:
         '''
             初始化用户信息
         '''
+        if not self._init_ok():
+            self._init_json()
         if gid not in self._eating["group_food"]:
             self._eating["group_food"][gid] = []
         if gid not in self._eating["count"]:
@@ -82,7 +87,6 @@ class EatingManager:
     def is_food_exists(self, _food: str, gid: Optional[str]) -> FoodLoc:
         '''
             检查菜品是否存在
-            @retval: FoodLoc
         '''
         for food in self._eating["basic_food"]:
             if food == _food:
@@ -226,58 +230,49 @@ class EatingManager:
         
     def get_greeting(self, meal: Meals) -> Union[str, None]:
         '''
-            干饭/摸鱼小助手
-            Get greeting, return None when empty
+            干饭/摸鱼小助手: Get greeting, return None when empty
         '''
-        if len(self._greetings.get(meal.value)) > 0:
-            greetings = self._greetings[meal.value]
-            return random.choice(greetings)
-        else:
-            return None
+        if meal.value[0] in self._greetings:
+            if len(self._greetings.get(meal.value[0])) > 0:
+                greetings = self._greetings[meal.value[0]]
+                return random.choice(greetings)
+            else:
+                return None
+        
+        return None
         
     def which_meals(self, input_cn: str) -> Union[Meals, None]:
         '''
-            Judge which meals is user's input
-            @retval: Meals
+            Judge which meals is user's input indicated
         '''
-        if input_cn == "早餐" or input_cn == "早饭":
-            meal = Meals.BREAKFAST
-        elif input_cn == "中餐" or input_cn == "午饭" or input_cn == "午餐":
-            meal = Meals.LUNCH
-        elif input_cn == "摸鱼" or input_cn == "饮茶":
-            meal = Meals.SNACK
-        elif input_cn == "晚餐" or input_cn == "晚饭":
-            meal = Meals.DINNER
-        elif input_cn == "夜宵" or input_cn == "宵夜":
-            meal = Meals.MIDNIGHT
+        for meal in Meals:
+            if input_cn in meal.value:
+                return meal
         else:
             return None
-            
-        return meal
 
     def add_greeting(self, meal: Meals, greeting: str) -> MessageSegment:
         '''
             添加某一时段问候语
-            接收两种形式输入：
-            - 1 添加问候 早餐 早上好
-            - 2 添加问候 早餐
-              got: 请输入问候语
-              ans: 早上好
         '''
-        self._greetings[meal].append(greeting)
+        self._greetings[meal.value[0]].append(greeting)
         self.save()
 
-        return MessageSegment.text(f"{greeting} 已加入 {meal} 问候~")
+        return MessageSegment.text(f"{greeting} 已加入 {meal.value[1]} 问候~")
     
     def show_greetings(self, meal: Meals) -> MessageSegment:
         '''
-            展示某一时段问候语，标号
+            展示某一时段问候语并标号
             等待用户输入标号，调用 remove_greeting 删除
         '''
         msg: MessageSegment = ""
         i: int = 1
-        for greeting in self._greetings[meal]:
-            msg += MessageSegment.text(f"\n{i}-{greeting}")
+        for greeting in self._greetings[meal.value[0]]:
+            if i < len(self._greetings[meal.value[0]]):
+                msg += MessageSegment.text(f"{i}-{greeting}\n")
+            else:
+                msg += MessageSegment.text(f"{i}-{greeting}")
+                
             i += 1
         
         return msg
@@ -286,22 +281,26 @@ class EatingManager:
         '''
             删除某一时段问候语
         '''
-        try:
-            greeting = self._greetings[meal].pop(index)
+        if index > len(self._greetings[meal.value[0]]):
+            return MessageSegment.text("输入序号不合法")
+        else:
+            greeting = self._greetings[meal.value[0]].pop(index-1)
             self.save()
-        except IndexError as e:
-            return MessageSegment.text(f"序号不合法：{e}")
         
-        return MessageSegment.text(f"{greeting} 已从 {meal} 问候中移除~")
+        return MessageSegment.text(f"{greeting} 已从 {meal.value[1]} 问候中移除~")
 
     def save(self) -> None:
         '''
             保存数据
         '''
-        with open(self._eating, 'w', encoding='utf-8') as f:
+        with open(self._eating_json, 'w', encoding='utf-8') as f:
             json.dump(self._eating, f, ensure_ascii=False, indent=4)
         
-        with open(self._greetings, 'w', encoding='utf-8') as f:
-            json.dump(self._greetingss, f, ensure_ascii=False, indent=4)
+        with open(self._greetings_json, 'w', encoding='utf-8') as f:
+            json.dump(self._greetings, f, ensure_ascii=False, indent=4)
 
 eating_manager = EatingManager()
+
+__all__ = [
+    eating_manager
+]
