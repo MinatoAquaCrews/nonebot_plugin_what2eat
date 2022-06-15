@@ -19,11 +19,11 @@ class PluginConfig(BaseModel, extra=Extra.ignore):
     superusers : Set[str] = set()
     
 class Meals(Enum):
-    BREAKFAST   = "breakfast"
-    LUNCH       = "lunch"
-    SNACK       = "snack"
-    DINNER      = "dinner"
-    MIDNIGHT    = "midnight"
+    BREAKFAST = "breakfast"
+    LUNCH = "lunch"
+    SNACK = "snack"
+    DINNER = "dinner"
+    MIDNIGHT = "midnight"
     
 driver = get_driver()
 what2eat_config: PluginConfig = PluginConfig.parse_obj(driver.config.dict())
@@ -82,8 +82,7 @@ async def download_file(_url: str, _file: Path, _name: str) -> None:
 @driver.on_startup
 async def what2eat_check() -> None:
     '''
-        Check the path
-        Generate the groups id saved in eating.json
+        Check the path, gnerate the groups id saved in eating.json
         If needed, download the preset menu and greetings
     '''
     if not what2eat_config.what2eat_path.exists():

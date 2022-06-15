@@ -143,7 +143,7 @@ def parse_index(key: str) -> None:
     async def _index_parser(matcher: Matcher, state: T_State, input_arg: Message = ArgStr(key)) -> None:
         try:
             state["index"] = int(input_arg)
-        except:
+        except Exception:
             await matcher.reject_arg(key, "输入序号不合法")
     
     return _index_parser
