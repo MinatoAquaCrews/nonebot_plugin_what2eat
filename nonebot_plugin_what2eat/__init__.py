@@ -1,197 +1,269 @@
+from typing import Coroutine, Any
 from nonebot import on_command, on_regex
+from nonebot.typing import T_State
 from nonebot.permission import SUPERUSER
-from nonebot.adapters.onebot.v11 import Bot, GROUP, GROUP_ADMIN, GROUP_OWNER, Message, GroupMessageEvent
-from nonebot.params import CommandArg
+from nonebot.adapters.onebot.v11 import GROUP, GROUP_ADMIN, GROUP_OWNER, Message, MessageEvent, GroupMessageEvent
+from nonebot.params import Depends, Arg, ArgStr, CommandArg, RegexMatched
+from nonebot.matcher import Matcher
 from nonebot.log import logger
-from .utils import eating_manager, Meals, config
+from .data_source import eating_manager, Meals
 from nonebot import require, get_bot
 
-greating_helper = require("nonebot_plugin_apscheduler").scheduler
+greeting_helper = require("nonebot_plugin_apscheduler").scheduler
 eating_helper = require("nonebot_plugin_apscheduler").scheduler
 
-__what2eat_version__ = "v0.2.6"
-plugin_notes = f'''
+__what2eat_version__ = "v0.3.0a1"
+__what2eat_notes__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot恰什么
 [添加 xx]   添加菜品至群菜单
 [移除 xx]   从菜单移除菜品
 [加菜 xx]   添加菜品至基础菜单
-[菜单]       查看群菜单
-[基础菜单]查看基础菜单
-[开启/关闭小助手]   开启/关闭按时吃饭小助手'''.strip()
+[菜单]      查看群菜单
+[基础菜单] 查看基础菜单
+[开启/关闭小助手] 开启/关闭吃饭小助手
+[添加/删除问候 问候语] 添加/删除吃饭小助手问候语'''.strip()
 
-plugin_help = on_command("吃什么帮助", permission=GROUP, priority=15, block=True)
-what2eat = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)吃(什么|啥|点啥)", permission=GROUP, priority=15, block=True)
-add_group = on_command("添加", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
-remove_food = on_command("移除", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
-add_basic = on_command("加菜", permission=SUPERUSER, priority=15, block=True)
-show_group = on_command("菜单", aliases={"群菜单", "查看菜单"}, permission=GROUP, priority=15, block=True)
-show_basic = on_command("基础菜单", permission=SUPERUSER, priority=15, block=True)
+what2eat = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)吃(什么|啥|点啥)(帮助)?$", priority=15)
+group_add = on_command("添加", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
+group_remove = on_command("移除", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
+basic_add = on_command("加菜", permission=SUPERUSER, priority=15, block=True)
+show_group_menu = on_command("菜单", aliases={"群菜单", "查看菜单"}, permission=GROUP, priority=15, block=True)
+show_basic_menu = on_command("基础菜单", permission=GROUP, priority=15, block=True)
 
-switch_greating = on_regex(r"(开启|关闭)小助手", permission=SUPERUSER, priority=15, block=True)
-add_greating = on_command("添加问候", aliases={"添加问候语"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
-remove_greating = on_command("删除问候", aliases={"删除问候语"}, permission=SUPERUSER, priority=15, block=True)
-
-@plugin_help.handle()
-async def _(bot: Bot):
-    await plugin_help.finish(plugin_notes)
+greeting_on = on_command("开启吃饭小助手", aliases={"启用吃饭小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
+greeting_off = on_command("关闭吃饭小助手", aliases={"禁用吃饭小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
+add_greeting = on_command("添加问候", aliases={"添加问候语"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
+remove_greeting = on_command("删除问候", aliases={"删除问候语", "移除问候", "移除问候语"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
 
 @what2eat.handle()
-async def _(bot: Bot, event: GroupMessageEvent):
+async def _(event: MessageEvent, args: str = RegexMatched()):
+    # check here
+    logger.info(f"Get args: {args}")
+    if args[-2:] == "帮助":
+        await what2eat.finish(__what2eat_notes__)
+    
     msg = eating_manager.get2eat(event)
     await what2eat.finish(msg)
 
-@add_group.handle()
-async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+@group_add.handle()
+async def _(event: GroupMessageEvent, args: Message = CommandArg()):
     args = args.extract_plain_text().strip().split()
     if not args:
-        await add_group.finish("还没输入你要添加的菜品呢~")
+        await group_add.finish("还没输入你要添加的菜品呢~")
     elif args and len(args) == 1:
         new_food = args[0]
     else:
-        await add_group.finish("添加菜品参数错误~")
+        await group_add.finish("添加菜品参数错误~")
     
-    user_id = str(event.user_id)
-    logger.info(f"User {user_id} 添加了 {new_food} 至菜单")
     msg = eating_manager.add_group_food(new_food, event)
 
-    await add_group.finish(msg)
+    await group_add.finish(msg)
 
-@add_basic.handle()
-async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+@basic_add.handle()
+async def _(args: Message = CommandArg()):
     args = args.extract_plain_text().strip().split()
     if not args:
-        await add_basic.finish("还没输入你要添加的菜品呢~")
+        await basic_add.finish("还没输入你要添加的菜品呢~")
     elif args and len(args) == 1:
         new_food = args[0]
     else:
-        await add_basic.finish("添加菜品参数错误~")
-    
-    user_id = str(event.user_id)
-    logger.info(f"Superuser {user_id} 添加了 {new_food} 至基础菜单")
+        await basic_add.finish("添加菜品参数错误~")
+
     msg = eating_manager.add_basic_food(new_food)
 
-    await add_basic.finish(msg)
+    await basic_add.finish(msg)
 
-@remove_food.handle()
-async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+@group_remove.handle()
+async def _(event: GroupMessageEvent, args: Message = CommandArg()):
     args = args.extract_plain_text().strip().split()
     if not args:
-        await remove_food.finish("还没输入你要移除的菜品呢~")
+        await group_remove.finish("还没输入你要移除的菜品呢~")
     elif args and len(args) == 1:
         food_to_remove = args[0]
     else:
-        await remove_food.finish("移除菜品参数错误~")
-    
-    user_id = str(event.user_id)
-    logger.info(f"User {user_id} 从菜单移除了 {food_to_remove}")
-    msg = eating_manager.remove_food(food_to_remove, event)
+        await group_remove.finish("移除菜品参数错误~")
 
-    await remove_food.finish(msg)
+    msg = eating_manager.remove_food(event, food_to_remove)
 
-@show_group.handle()
-async def _(bot: Bot, event: GroupMessageEvent):
-    msg = eating_manager.show_group_menu(event)
-    await show_group.finish(msg)
+    await group_remove.finish(msg)
 
-@show_basic.handle()
-async def _(bot: Bot, event: GroupMessageEvent):
+@show_group_menu.handle()
+async def _(event: GroupMessageEvent):
+    gid = str(event.group_id)
+    msg = eating_manager.show_group_menu(gid)
+    await show_group_menu.finish(msg)
+
+@show_basic_menu.handle()
+async def _(matcher: Matcher):
     msg = eating_manager.show_basic_menu()
-    await show_basic.finish(msg)
+    await matcher.finish(msg)
 
-@switch_greating.handle()
-async def _(bot: Bot, event: GroupMessageEvent):
-    args = event.get_plaintext()
-    if args[:2] == "开启":
-        greating_helper.resume()
-        msg = f"已开启按时吃饭小助手~"
-    elif args[:2] == "关闭":
-        greating_helper.pause()
-        msg = f"已关闭按时吃饭小助手~"
 
-    await switch_greating.finish(msg)
+# ------------------------- Greetings -------------------------
+@greeting_on.handle()
+async def _(event: GroupMessageEvent):
+    gid = str(event.group_id)
+    eating_manager.update_groups_on(gid, True)
+    await greeting_on.finish("已开启吃饭小助手~")
+
+@greeting_off.handle()
+async def _(event: GroupMessageEvent):
+    gid = str(event.group_id)
+    eating_manager.update_groups_on(gid, False)
+    await greeting_off.finish("已关闭吃饭小助手~")
+
+def parse_greeting(key: str) -> None:
+    '''
+        Parser the greeting input from user then store in state["greeting"]
+    '''
+    def _greeting_parser(state: T_State, input_arg: Message = Arg(key)) -> None:
+        state["greeting"] = input_arg
     
-@add_greating.handle()
-async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
-    args = args.extract_plain_text().strip().split()
-    if not args:
-        await add_basic.finish("还没输入你要添加的问候语~")
-    elif args and len(args) == 1:
-        await add_greating.finish("输入参数数目错误~")
-    elif len(args) > 2:
-        await add_greating.finish("参数太多啦~")
+    return _greeting_parser
 
-    msg = eating_manager.add_greating(args)
-    await add_greating.finish(msg)
+def parse_meal(key: str) -> Coroutine[Any, Any, None]:
+    '''
+        Parser the meal input from user then store in state["meal"]
+        If illigal, reject it
+    '''
+    async def _meal_parser(matcher: Matcher, state: T_State, input_arg: Message = ArgStr(key)) -> None:
+        res = eating_manager.which_meals(input_arg)
+        if res is None:
+            await matcher.reject_arg(key, "输入时段不合法")
+        else:
+            state["meal"] = res
     
-@remove_greating.handle()
-async def _(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
+    return _meal_parser
+
+def parse_index(key: str) -> None:
+    '''
+        Parser the index of greeting to be removed input from user then store in state["index"]
+    '''
+    async def _index_parser(matcher: Matcher, state: T_State, input_arg: Message = ArgStr(key)) -> None:
+        try:
+            state["index"] = int(input_arg)
+        except:
+            await matcher.reject_arg(key, "输入序号不合法")
+    
+    return _index_parser
+        
+@add_greeting.handle()
+async def _(matcher: Matcher, args: Message = CommandArg()):
     args = args.extract_plain_text().strip().split()
-    if not args:
-        await add_basic.finish("请输入删除问候语的类别~")
-    elif args and len(args) > 1:
-        await add_greating.finish("参数太多啦~")
+    if args and len(args) <= 2:
+        res = eating_manager.which_meals(args[0])
+        if isinstance(res, Meals):
+            matcher.set_arg("meal", args[0])
+            if len(args) == 2:
+                matcher.set_arg("greeting", args[1])
+    
+@remove_greeting.handle()
+async def _(matcher: Matcher, args: Message = CommandArg()):
+    args = args.extract_plain_text().strip().split()
+    if args:
+        res = eating_manager.which_meals(args[0])
+        if isinstance(res, Meals):
+            matcher.set_arg("meal", args[0])
+            msg = eating_manager.show_greetings(res)
+            await matcher.send(msg)
+    
+@add_greeting.got(
+    "meal",
+    prompt="请输入添加问候语的时段，可选：早餐/午餐/摸鱼/晚餐/夜宵",
+    parameterless=[Depends(parse_meal("meal"))]
+)
+@add_greeting.got(
+    "greeting",
+    prompt="请输入添加的问候语",
+    parameterless=[Depends(parse_greeting("greeting"))]
+)
+async def handle_add_greeting(matcher: Matcher, meal: Meals = ArgStr(), greeting: str = Arg()):
+    msg = eating_manager.add_greeting(meal, greeting)
+    await matcher.finish(msg)
 
-    msg = eating_manager.remove_greating(args[0])
-    await remove_greating.finish(msg)
+@remove_greeting.got(
+    "meal",
+    prompt="请输入删除问候语的时段，可选：早餐/午餐/摸鱼/晚餐/夜宵",
+    parameterless=[Depends(parse_meal("meal"))]
+)
+async def get_meal_show_greetings(matcher: Matcher, meal: Meals = ArgStr()):
+    msg = eating_manager.show_greetings(meal)
+    await matcher.send(msg)
+    
+@remove_greeting.got(
+    "index",
+    prompt="请输入删除的问候语序号",
+    parameterless=[Depends(parse_index("index"))]
+)
+async def handle_remove_greeting(matcher: Matcher, meal: Meals = ArgStr(), index: int = ArgStr()):
+    msg = eating_manager.remove_greeting(meal, index)
+    await matcher.finish(msg)
 
+
+# ------------------------- Schedulers -------------------------
 # 重置吃什么次数，包括夜宵
-@eating_helper.scheduled_job("cron", hour="6,11,17,22", minute=0)
+@eating_helper.scheduled_job("cron", hour="6,11,17,22", minute=0, misfire_grace_time=60)
 async def _():
-    eating_manager.reset_eating()
+    eating_manager.reset_count()
     logger.info("今天吃什么次数已刷新")
 
 # 早餐提醒
-@greating_helper.scheduled_job("cron", hour=7, minute=0)
+@greeting_helper.scheduled_job("cron", hour=7, minute=0, misfire_grace_time=60)
 async def time_for_breakfast():
     bot = get_bot()
-    msg = eating_manager.get2greating(Meals.BREAKFAST)
-    if msg and len(config.groups_id) > 0:
-        for group_id in config.groups_id:
-            await bot.send_group_msg(group_id=int(group_id), message=msg)
+    msg = eating_manager.get_greeting(Meals.BREAKFAST)
+    if msg and len(eating_manager._greetings["groups_id"]) > 0:
+        for gid in eating_manager._greetings["groups_id"]:
+            if eating_manager._greetings["groups_id"].get(gid, False):
+                await bot.send_group_msg(group_id=int(gid), message=msg)
         
         logger.info(f"已群发早餐提醒")
 
 # 午餐提醒
-@greating_helper.scheduled_job("cron", hour=12, minute=0)
+@greeting_helper.scheduled_job("cron", hour=12, minute=0, misfire_grace_time=60)
 async def time_for_lunch():
     bot = get_bot()
-    msg = eating_manager.get2greating(Meals.LUNCH)
-    if msg and len(config.groups_id) > 0:
-        for group_id in config.groups_id:
-            await bot.send_group_msg(group_id=int(group_id), message=msg)
+    msg = eating_manager.get_greeting(Meals.LUNCH)
+    if msg and len(eating_manager._greetings["groups_id"]) > 0:
+        for gid in eating_manager._greetings["groups_id"]:
+            if eating_manager._greetings["groups_id"].get(gid, False):
+                await bot.send_group_msg(group_id=int(gid), message=msg)
         
         logger.info(f"已群发午餐提醒")
 
 # 下午茶/摸鱼提醒
-@greating_helper.scheduled_job("cron", hour=15, minute=0)
+@greeting_helper.scheduled_job("cron", hour=15, minute=0, misfire_grace_time=60)
 async def time_for_snack():
     bot = get_bot()
-    msg = eating_manager.get2greating(Meals.SNACK)
-    if msg and len(config.groups_id) > 0:
-        for group_id in config.groups_id:
-            await bot.send_group_msg(group_id=int(group_id), message=msg)
+    msg = eating_manager.get_greeting(Meals.SNACK)
+    if msg and len(eating_manager._greetings["groups_id"]) > 0:
+        for gid in eating_manager._greetings["groups_id"]:
+            if eating_manager._greetings["groups_id"].get(gid, False):
+                await bot.send_group_msg(group_id=int(gid), message=msg)
         
         logger.info(f"已群发摸鱼提醒")
 
 # 晚餐提醒
-@greating_helper.scheduled_job("cron", hour=18, minute=0)
+@greeting_helper.scheduled_job("cron", hour=18, minute=0, misfire_grace_time=60)
 async def time_for_dinner():
     bot = get_bot()
-    msg = eating_manager.get2greating(Meals.DINNER)
-    if msg and len(config.groups_id) > 0:
-        for group_id in config.groups_id:
-            await bot.send_group_msg(group_id=int(group_id), message=msg)
+    msg = eating_manager.get_greeting(Meals.DINNER)
+    if msg and len(eating_manager._greetings["groups_id"]) > 0:
+        for gid in eating_manager._greetings["groups_id"]:
+            if eating_manager._greetings["groups_id"].get(gid, False):
+                await bot.send_group_msg(group_id=int(gid), message=msg)
         
         logger.info(f"已群发晚餐提醒")
 
 # 夜宵提醒
-@greating_helper.scheduled_job("cron", hour=22, minute=0)
+@greeting_helper.scheduled_job("cron", hour=22, minute=0, misfire_grace_time=60)
 async def time_for_midnight():
     bot = get_bot()
-    msg = eating_manager.get2greating(Meals.MIDNIGHT)
-    if msg and len(config.groups_id) > 0:
-        for group_id in config.groups_id:
-            await bot.send_group_msg(group_id=int(group_id), message=msg)
+    msg = eating_manager.get_greeting(Meals.MIDNIGHT)
+    if msg and len(eating_manager._greetings["groups_id"]) > 0:
+        for gid in eating_manager._greetings["groups_id"]:
+            if eating_manager._greetings["groups_id"].get(gid, False):
+                await bot.send_group_msg(group_id=int(gid), message=msg)
         
         logger.info(f"已群发夜宵提醒")

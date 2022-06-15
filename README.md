@@ -11,16 +11,20 @@ _🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
 
 <p align="center">
   
-  <a href="https://github.com/KafCoppelia/nonebot_plugin_what2eat/blob/beta/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-informational">
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/blob/beta/LICENSE">
+    <img src="https://img.shields.io/github/license/MinatoAquaCrews/nonebot_plugin_what2eat?color=blue">
   </a>
   
   <a href="https://github.com/nonebot/nonebot2">
-    <img src="https://img.shields.io/badge/nonebot2-2.0.0beta.2-green">
+    <img src="https://img.shields.io/badge/nonebot2-2.0.0beta.2+-green">
   </a>
   
-  <a href="">
-    <img src="https://img.shields.io/badge/release-v0.2.6-orange">
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.0a1">
+    <img src="https://img.shields.io/github/v/release/MinatoAquaCrews/nonebot_plugin_what2eat?color=orange">
+  </a>
+
+  <a href="https://www.codefactor.io/repository/github/MinatoAquaCrews/nonebot_plugin_what2eat">
+    <img src="https://img.shields.io/codefactor/grade/github/MinatoAquaCrews/nonebot_plugin_what2eat/beta?color=red">
   </a>
   
 </p>
@@ -29,19 +33,17 @@ _🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
 
 ## 版本
 
-v0.2.6
+v0.3.0a1
 
-⚠ 适配nonebot2-2.0.0beta.2；
+⚠ 适配nonebot2-2.0.0beta.2+；
 
-👉 适配alpha.16版本参见[alpha.16分支](https://github.com/KafCoppelia/nonebot_plugin_what2eat/tree/alpha.16)
-
-[更新日志](https://github.com/KafCoppelia/nonebot_plugin_what2eat/releases/tag/v0.2.6)
+[更新日志](https://github.com/KafCoppelia/nonebot_plugin_what2eat/releases/tag/v0.3.0a1)
 
 ## 安装
 
-1. 通过`pip`或`nb`，版本请指定`0.2.6`；
+1. 通过`pip`或`nb`安装；
 
-2. 数据默认位于`./resource`下`data.json`与`greating.json`，可通过设置`env`下`WHAT2EAT_PATH`更改；基础菜单、群特色菜单及群友询问Bot次数会记录在该文件中：
+2. 数据默认位于`./resource`下`eating.json`与`greetings.json`，可通过设置`env`下`WHAT2EAT_PATH`更改；基础菜单、群特色菜单及群友询问Bot次数会记录在该文件中：
 
     ```python
     WHAT2EAT_PATH="your-path-to-resource"
@@ -51,48 +53,49 @@ v0.2.6
 
 1. 选择恐惧症？让Bot建议你今天吃什么！
 
-2. 每餐每个时间段询问Bot建议上限可通过`EATING_LIMIT`修改（默认5次），每日6点、11点、17点、22点（夜宵）自动刷新：
-    
-    ```python
-    EATING_LIMIT=99
+2. ⚠ 插件配置：
+   
+    ``` python
+    WHAT2EAT_PATH="your-path-to-resource"         # 资源路径
+    USE_PRESET_MENU=true                          # 是否从repo中下载预置基础菜单，默认为True
+    USE_PRESET_GREETINGS=true                     # 是否从repo中下载预置问候语，默认为True
+    EATING_LIMIT=99                               # 每个时段吃什么的次数上限，默认5，每日6点、11点、17点、22点自动刷新
+    GREETING_GROUPS_ID=["123456789", "987654321"] # 默认开启小助手群组，或{"123456789", "987654321"}
+    SUPERUSERS={"12345678"}                       # 同nb超管配置
     ```
 
-3. 群管理可自行添加或移除群特色菜单（`data.json`下`[group_food][group_id]`）；超管可添加或移除基础菜单（`[basic_food]`）；
+3. 群管理可自行添加或移除群特色菜单（`eating.json`下`[group_food][group_id]`）；超管可添加或移除基础菜单（`[basic_food]`）；
 
-4. 各群特色菜单相互独立；各群每个时间段询问Bot建议次数独立；Bot会综合各群菜单+基础菜单给出建议；查看群菜单与基础菜单命令分立；
+4. 各群特色菜单相互独立；各群每个时间段询问Bot建议次数独立；Bot会综合各群菜单+基础菜单给出建议；
 
-5. 提醒按时吃饭小助手：每天7、12、15、18、22点群发**问候语**提醒群友按时吃饭/摸鱼，`GROUPS_ID`设置需要群发的群号列表，形如：
+5. 提醒吃饭小助手：每天7、12、15、18、22点群发问候语提醒群友按时吃饭/摸鱼，`GROUPS_ID`设置常开的群号列表（或集合），形如：
 
     ```python
-    GROUPS_ID=["123456789", "987654321"]
+    GREETING_GROUPS_ID=["123456789", "987654321"] # or {"123456789", "987654321"}
     ```
 
-6. 按时吃饭小助手全局开关；
-
-7. 吃什么帮助文案；
-
-8. **新增** 更多的预置基础菜单，精选家常菜及八大菜系（未经核实）；
-
-9. **新增** 初次使用该插件时，若不存在`data.json`与`greating.json`，设置`USE_PRESET_MENU`及`USE_PRESET_GREATING`可获取仓库中最新的预置菜单及问候语；若存在`data.json`与`greating.json`，则对应参数不会生效：
+6. 初次使用该插件时，若不存在`eating.json`与`greetings.json`，设置`USE_PRESET_MENU`及`USE_PRESET_GREETINGS`可从仓库中尝试下载；当下载失败会写入初始键值。若存在`eating.json`与`greetings.json`，则对应参数不会生效。
 
     ```python
     USE_PRESET_MENU=true
-    USE_PRESET_GREATING=true
+    USE_PRESET_GREETINGS=true
     ```
 
 ## 命令
 
 1. 吃什么：今天吃什么、中午吃啥、今晚吃啥、中午吃什么、晚上吃啥、晚上吃什么、夜宵吃啥……
 
-2. [管理或群主或超管] 添加或移除：添加/移除 菜名；
+2. [管理员或超管] 添加或移除群菜名：[添加/移除 菜名]；
 
-3. 查看群菜单：菜单/群菜单/查看菜单；
+3. 查看群菜单：[菜单/群菜单/查看菜单]；
 
-4. [超管] 添加至基础菜单：加菜 菜名；
+4. [超管] 添加至基础菜单：[加菜 菜名]；
 
-5. [超管] 查看基础菜单：基础菜单；
+5. 查看基础菜单：[基础菜单]；
 
-6. [超管] 开启/关闭按时吃饭小助手：开启/关闭小助手；
+6. [管理员或超管] 开启/关闭吃饭小助手：[开启/启用/关闭/禁用吃饭小助手]；
+
+7. [管理员或超管] 添加/删除吃饭小助手问候语：[添加/删除/移除问候 问候语]；
 
 ## 效果
 
