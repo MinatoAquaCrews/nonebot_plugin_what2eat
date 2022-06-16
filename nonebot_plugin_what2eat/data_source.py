@@ -3,7 +3,9 @@ import random
 from pathlib import Path
 from enum import Enum
 from typing import Optional, Union, List, Dict
+from nonebot import logger
 from .config import Meals, what2eat_config
+from .utils import do_compatible
 try:
     import ujson as json
 except ModuleNotFoundError:
@@ -20,13 +22,21 @@ class EatingManager:
         self._eating: Dict[str, Union[List[str], Dict[str, Union[Dict[str, List[int]], List[str]]]]] = {}
         self._greetings: Dict[str, Union[List[str], Dict[str, bool]]] = {}
         
-    def _init_json(self):
-        self._init_ok = True
         self._eating_json: Path = what2eat_config.what2eat_path / "eating.json"
+        self._greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
+        
+        '''
+            Compatible work will be deprecated in next version
+        '''
+        if what2eat_config.use_compatible:
+            do_compatible(self._eating_json, self._greetings_json)
+            logger.debug("Compatible work success!")
+        
+    def _init_json(self) -> None:
+        self._init_ok = True
         with open(self._eating_json, 'r', encoding='utf-8') as f:
             self._eating = json.load(f)
             
-        self._greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
         with open(self._greetings_json, 'r', encoding='utf-8') as f:
             self._greetings = json.load(f)
     
@@ -34,7 +44,7 @@ class EatingManager:
         '''
             初始化用户信息
         '''
-        if not self._init_ok():
+        if not self._init_ok:
             self._init_json()
         if gid not in self._eating["group_food"]:
             self._eating["group_food"][gid] = []
@@ -47,11 +57,13 @@ class EatingManager:
         '''
             今天吃什么
         '''
+        if not self._init_ok:
+            self._init_json()
         if isinstance(event, PrivateMessageEvent):
             if len(self._eating["basic_food"]) == 0:
                 return MessageSegment.text("还没有菜单呢，就先饿着肚子吧，请[添加 菜名]🤤")
             else:
-                return MessageSegment.text(random.choice(self._eating["basic_food"]))
+                return MessageSegment.text("建议") + MessageSegment.text(random.choice(self._eating["basic_food"]))
             
         uid = str(event.user_id)
         gid = str(event.group_id)

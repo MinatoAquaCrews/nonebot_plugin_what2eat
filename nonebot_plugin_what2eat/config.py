@@ -5,7 +5,6 @@ from typing import List, Dict, Set, Union, Any
 import httpx
 from nonebot import get_driver
 from nonebot import logger
-from pydantic.errors import PathError
 try:
     import ujson as json
 except ModuleNotFoundError:
@@ -17,7 +16,11 @@ class PluginConfig(BaseModel, extra=Extra.ignore):
     use_preset_greetings: bool = False
     eating_limit: int = 5
     greeting_groups_id: Set[str] = set()
-    superusers : Set[str] = set()
+    superusers: Set[str] = set()
+    '''
+        v0.3.0 is compatible with configure json file of version 0.2.x, but will be deprecated in next version
+    '''
+    use_compatible: bool = True
     
 class Meals(Enum):
     BREAKFAST = ["breakfast", "早餐", "早饭"]
@@ -85,40 +88,6 @@ async def download_file(_file: Path, _name: str) -> None:
         save_json(_file, resp)
         logger.info(f"Get file {_name} from repo")
         
-def compatible_with_v02x(new_eating_json: Path, new_greeting_json: Path) -> None:
-    '''
-        v0.3.0 is compatible with configure json file of version 0.2.x, but will be deprecated in next version
-        Rename old file(data.json) to eating.json, greating.json(that's a wrong word) to greetings.json
-        Replace old keys(eating) with new keys(count)
-    '''
-    logger.warning("v0.3.0 is compatible with configure json file of version 0.2.x, but will be deprecated in next version")
-    
-    old_data_json: Path = what2eat_config.what2eat_path / "data.json"
-    
-    if not old_data_json.exists():
-        logger.info(f"Old data.json doesn't exist, ignored: {old_data_json}")
-    else:
-        # Rename
-        res = old_data_json.rename(new_eating_json)
-        if not res.exists():
-            raise PathError
-        else:
-            with new_eating_json.open("r", encoding="utf-8") as f:
-                _f: Dict[str, Union[List[str], Dict[str, Union[Dict[str, List[int]], List[str]]]]] = json.load(f)
-                _f["count"] = _f.pop("eating")
-            
-            save_json(new_eating_json, _f)
-    
-    old_greating_json: Path = what2eat_config.what2eat_path / "greating.json"
-    
-    if not old_greating_json.exists():
-        logger.info(f"Old greating.json doesn't exist, ignored: {old_greating_json}")
-    else:
-        # Rename
-        res = old_greating_json.rename(new_greeting_json)
-        if not res.exists():
-            raise PathError
-        
 @driver.on_startup
 async def what2eat_check() -> None:
     '''
@@ -128,15 +97,11 @@ async def what2eat_check() -> None:
     if not what2eat_config.what2eat_path.exists():
         what2eat_config.what2eat_path.mkdir(parents=True, exist_ok=True)
     
-    eating_json: Path = what2eat_config.what2eat_path / "eating.json"
-    greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
-    
-    compatible_with_v02x(eating_json, greetings_json)
-    
     '''
         If eating.json doesn't exist or eating.json exists but f.get["basic_food"] doesn't exist and USE_PRESET_MENU is True, download
         If USE_PRESET_MENU is False, break
     '''
+    eating_json: Path = what2eat_config.what2eat_path / "eating.json"
     if what2eat_config.use_preset_menu:
         if not eating_json.exists():
             await download_file(eating_json, "eating.json")
@@ -159,6 +124,7 @@ async def what2eat_check() -> None:
         If greetings.json doesn't exist or greetings.json exists but ... ALL doesn't exist and USE_PRESET_greetings is True, download
         If USE_PRESET_greetings is False, break
     '''
+    greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
     if what2eat_config.use_preset_greetings:
         if not greetings_json.exists():
             await download_file(greetings_json, "greetings.json")    
@@ -190,5 +156,5 @@ async def what2eat_check() -> None:
         save_json(greetings_json, _f)
 
 __all__ = [
-    Meals, what2eat_config
+    Meals, what2eat_config, save_json
 ]
