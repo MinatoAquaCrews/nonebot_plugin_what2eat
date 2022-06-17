@@ -298,10 +298,12 @@ class EatingManager:
         '''
             保存数据
         '''
-        with open(self._eating, 'w', encoding='utf-8') as f:
+        _eating_json: Path = what2eat_config.what2eat_path / "eating.json"
+        with open(_eating_json, 'w', encoding='utf-8') as f:
             json.dump(self._eating, f, ensure_ascii=False, indent=4)
-        
-        with open(self._greetings, 'w', encoding='utf-8') as f:
-            json.dump(self._greetingss, f, ensure_ascii=False, indent=4)
+
+        _greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
+        with open(_greetings_json, 'w', encoding='utf-8') as f:
+            json.dump(self._greetings, f, ensure_ascii=False, indent=4)
 
 eating_manager = EatingManager()
