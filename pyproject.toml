@@ -1,10 +1,11 @@
 [tool.poetry]
 name = "nonebot_plugin_what2eat"
-version = "0.3.0a1"
-description = "What to eat today for your breakfast, lunch, dinner and even midnight snack!"
+version = "0.3.0"
+description = "Ask bot for what to eat today!"
 authors = ["KafCoppelia <k740677208@gmail.com>"]
 license = "MIT"
 readme = "README.md"
+packages = [{include = "nonebot_plugin_what2eat"}]
 
 [tool.poetry.dependencies]
 python = "^3.7.3"

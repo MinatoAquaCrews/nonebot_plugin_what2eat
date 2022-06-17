@@ -4,6 +4,7 @@ from pathlib import Path
 from enum import Enum
 from typing import Optional, Union, List, Dict
 from .config import Meals, what2eat_config
+from .utils import do_compatible
 try:
     import ujson as json
 except ModuleNotFoundError:
@@ -16,21 +17,33 @@ class FoodLoc(Enum):
 
 class EatingManager:
     def __init__(self):
+        self._init_ok: bool = False
         self._eating: Dict[str, Union[List[str], Dict[str, Union[Dict[str, List[int]], List[str]]]]] = {}
         self._greetings: Dict[str, Union[List[str], Dict[str, bool]]] = {}
         
-        _eating_json: Path = what2eat_config.what2eat_path / "eating.json"
-        with open(_eating_json, 'r', encoding='utf-8') as f:
+        self._eating_json: Path = what2eat_config.what2eat_path / "eating.json"
+        self._greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
+        
+        '''
+            Compatible work will be deprecated in next version
+        '''
+        do_compatible(self._eating_json, self._greetings_json)
+        
+    def _init_json(self) -> None:
+        self._init_ok = True
+        with open(self._eating_json, 'r', encoding='utf-8') as f:
             self._eating = json.load(f)
             
-        _greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
-        with open(_greetings_json, 'r', encoding='utf-8') as f:
+        with open(self._greetings_json, 'r', encoding='utf-8') as f:
             self._greetings = json.load(f)
     
     def _init_data(self, gid: str, uid: str) -> None:
         '''
             初始化用户信息
         '''
+        if not self._init_ok:
+            self._init_json()
+            
         if gid not in self._eating["group_food"]:
             self._eating["group_food"][gid] = []
         if gid not in self._eating["count"]:
@@ -42,18 +55,21 @@ class EatingManager:
         '''
             今天吃什么
         '''
+        if not self._init_ok:
+            self._init_json()
+            
         if isinstance(event, PrivateMessageEvent):
             if len(self._eating["basic_food"]) == 0:
                 return MessageSegment.text("还没有菜单呢，就先饿着肚子吧，请[添加 菜名]🤤")
             else:
-                return MessageSegment.text(random.choice(self._eating["basic_food"]))
+                return MessageSegment.text("建议") + MessageSegment.text(random.choice(self._eating["basic_food"]))
             
         uid = str(event.user_id)
         gid = str(event.group_id)
         food_list: List[str] = []
 
         self._init_data(gid, uid)
-        if not self.eating_check(gid, uid):
+        if not self._eating_check(gid, uid):
             return random.choice(
                 [
                     "你今天已经吃得够多了！",
@@ -75,14 +91,13 @@ class EatingManager:
             # Even a food maybe in basic AND group menu, probability of it is doubled
             msg = MessageSegment.text("建议") + MessageSegment.text(random.choice(food_list))
             self._eating["count"][gid][uid] += 1
-            self.save()
+            self._save()
 
             return msg
 
-    def is_food_exists(self, _food: str, gid: Optional[str]) -> FoodLoc:
+    def _is_food_exists(self, _food: str, gid: Optional[str]) -> FoodLoc:
         '''
             检查菜品是否存在
-            @retval: FoodLoc
         '''
         for food in self._eating["basic_food"]:
             if food == _food:
@@ -96,7 +111,7 @@ class EatingManager:
         
         return FoodLoc.NOT_EXISTS
 
-    def eating_check(self, gid: str, uid: str) -> bool:
+    def _eating_check(self, gid: str, uid: str) -> bool:
         '''
             检查是否吃饱
         '''
@@ -111,7 +126,7 @@ class EatingManager:
         msg: MessageSegment = ""
 
         self._init_data(gid, uid)
-        status: FoodLoc = self.is_food_exists(new_food, gid)
+        status: FoodLoc = self._is_food_exists(new_food, gid)
         
         if status == FoodLoc.IN_BASIC:
             msg = MessageSegment.text(f"{new_food} 已在基础菜单中~")
@@ -119,7 +134,7 @@ class EatingManager:
             msg = MessageSegment.text(f"{new_food} 已在群特色菜单中~")
         else:
             self._eating["group_food"][gid].append(new_food)
-            self.save()
+            self._save()
             msg = MessageSegment.text(f"{new_food} 已加入群特色菜单~")
         
         return msg
@@ -128,14 +143,16 @@ class EatingManager:
         '''
             添加至基础菜单 SUPERUSER 权限
         '''
-        status: FoodLoc = self.is_food_exists(new_food)
+        if not self._init_ok:
+            self._init_json()
+        status: FoodLoc = self._is_food_exists(new_food)
         
         if status == FoodLoc.IN_BASIC:
             msg = MessageSegment.text(f"{new_food} 已在基础菜单中~")
             
         elif status == FoodLoc.NOT_EXISTS:
             self._eating["basic_food"].append(new_food)
-            self.save()
+            self._save()
             msg = MessageSegment.text(f"{new_food} 已加入基础菜单~")
         
         return msg
@@ -150,11 +167,11 @@ class EatingManager:
         msg: MessageSegment = ""
         
         self._init_data(gid, uid)
-        status: FoodLoc = self.is_food_exists(food_to_remove, gid)
+        status: FoodLoc = self._is_food_exists(food_to_remove, gid)
 
         if status == FoodLoc.IN_GROUP:
             self._eating["group_food"][gid].remove(food_to_remove)
-            self.save()
+            self._save()
             msg = MessageSegment.text(f"{food_to_remove} 已从群菜单中删除~")
             
         elif status == FoodLoc.IN_BASIC:
@@ -162,7 +179,7 @@ class EatingManager:
                 msg = MessageSegment.text(f"{food_to_remove} 在基础菜单中，非超管不可操作哦~")
             else:
                 self._eating["basic_food"].remove(food_to_remove)
-                self.save()
+                self._save()
                 msg = MessageSegment.text(f"{food_to_remove} 已从基础菜单中删除~")   
         else:
             msg = MessageSegment.text(f"{food_to_remove} 不在菜单中哦~")
@@ -173,14 +190,19 @@ class EatingManager:
         '''
             重置三餐 eating times
         '''
+        if not self._init_ok:
+            self._init_json()
         for gid in self._eating["count"]:
             for uid in self._eating["count"][gid]:
                 self._eating["count"][gid][uid] = 0
         
-        self.save()
+        self._save()
 
     # ------------------------- Menu -------------------------
     def show_group_menu(self, gid: str) -> MessageSegment:
+        if not self._init_ok:
+            self._init_json()
+            
         msg: MessageSegment = ""
         
         if gid not in self._eating["group_food"]:
@@ -196,6 +218,9 @@ class EatingManager:
         return MessageSegment.text("还没有群特色菜单呢，请[添加 菜名]🤤")
 
     def show_basic_menu(self) -> MessageSegment:
+        if not self._init_ok:
+            self._init_json()
+
         msg: MessageSegment = ""
 
         if len(self._eating["basic_food"]) > 0:
@@ -208,13 +233,12 @@ class EatingManager:
         return MessageSegment.text("还没有基础菜单呢，请[添加 菜名]🤤")
 
     # ------------------------- greetings -------------------------
-    def is_groups_on(self, gid) -> bool:
-        return self._greetings["groups_id"].get(gid, False)
-        
     def update_groups_on(self, gid: str, new_state: bool) -> None:
         '''
             Turn on/off greeting tips in group
         '''
+        if not self._init_ok:
+            self._init_json()
         if new_state:
             if gid not in self._greetings["groups_id"]:
                 self._greetings["groups_id"].update({gid: True})
@@ -222,62 +246,64 @@ class EatingManager:
             if gid in self._greetings["groups_id"]:
                 self._greetings["groups_id"].update({gid: False})
         
-        self.save()
+        self._save()
         
     def get_greeting(self, meal: Meals) -> Union[str, None]:
         '''
-            干饭/摸鱼小助手
-            Get greeting, return None when empty
+            干饭/摸鱼小助手: Get greeting, return None when empty
         '''
-        if len(self._greetings.get(meal.value)) > 0:
-            greetings = self._greetings[meal.value]
-            return random.choice(greetings)
-        else:
-            return None
+        if not self._init_ok:
+            self._init_json()
+        if meal.value[0] in self._greetings:
+            if len(self._greetings.get(meal.value[0])) > 0:
+                greetings = self._greetings[meal.value[0]]
+                return random.choice(greetings)
+            else:
+                return None
+        
+        return None
         
     def which_meals(self, input_cn: str) -> Union[Meals, None]:
         '''
-            Judge which meals is user's input
-            @retval: Meals
+            Judge which meals is user's input indicated
         '''
-        if input_cn == "早餐" or input_cn == "早饭":
-            meal = Meals.BREAKFAST
-        elif input_cn == "中餐" or input_cn == "午饭" or input_cn == "午餐":
-            meal = Meals.LUNCH
-        elif input_cn == "摸鱼" or input_cn == "饮茶":
-            meal = Meals.SNACK
-        elif input_cn == "晚餐" or input_cn == "晚饭":
-            meal = Meals.DINNER
-        elif input_cn == "夜宵" or input_cn == "宵夜":
-            meal = Meals.MIDNIGHT
+        if not self._init_ok:
+            self._init_json()
+            
+        for meal in Meals:
+            if input_cn in meal.value:
+                return meal
         else:
             return None
-            
-        return meal
 
     def add_greeting(self, meal: Meals, greeting: str) -> MessageSegment:
         '''
             添加某一时段问候语
-            接收两种形式输入：
-            - 1 添加问候 早餐 早上好
-            - 2 添加问候 早餐
-              got: 请输入问候语
-              ans: 早上好
         '''
-        self._greetings[meal].append(greeting)
-        self.save()
+        if not self._init_ok:
+            self._init_json()
+            
+        self._greetings[meal.value[0]].append(greeting)
+        self._save()
 
-        return MessageSegment.text(f"{greeting} 已加入 {meal} 问候~")
+        return MessageSegment.text(f"{greeting} 已加入 {meal.value[1]} 问候~")
     
     def show_greetings(self, meal: Meals) -> MessageSegment:
         '''
-            展示某一时段问候语，标号
+            展示某一时段问候语并标号
             等待用户输入标号，调用 remove_greeting 删除
         '''
+        if not self._init_ok:
+            self._init_json()
+            
         msg: MessageSegment = ""
         i: int = 1
-        for greeting in self._greetings[meal]:
-            msg += MessageSegment.text(f"\n{i}-{greeting}")
+        for greeting in self._greetings[meal.value[0]]:
+            if i < len(self._greetings[meal.value[0]]):
+                msg += MessageSegment.text(f"{i}-{greeting}\n")
+            else:
+                msg += MessageSegment.text(f"{i}-{greeting}")
+                
             i += 1
         
         return msg
@@ -286,24 +312,29 @@ class EatingManager:
         '''
             删除某一时段问候语
         '''
-        try:
-            greeting = self._greetings[meal].pop(index)
-            self.save()
-        except IndexError as e:
-            return MessageSegment.text(f"序号不合法：{e}")
+        if not self._init_ok:
+            self._init_json()
+            
+        if index > len(self._greetings[meal.value[0]]):
+            return MessageSegment.text("输入序号不合法")
+        else:
+            greeting = self._greetings[meal.value[0]].pop(index-1)
+            self._save()
         
-        return MessageSegment.text(f"{greeting} 已从 {meal} 问候中移除~")
+        return MessageSegment.text(f"{greeting} 已从 {meal.value[1]} 问候中移除~")
 
-    def save(self) -> None:
+    def _save(self) -> None:
         '''
             保存数据
         '''
-        _eating_json: Path = what2eat_config.what2eat_path / "eating.json"
-        with open(_eating_json, 'w', encoding='utf-8') as f:
+        with open(self._eating_json, 'w', encoding='utf-8') as f:
             json.dump(self._eating, f, ensure_ascii=False, indent=4)
-
-        _greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
-        with open(_greetings_json, 'w', encoding='utf-8') as f:
+        
+        with open(self._greetings_json, 'w', encoding='utf-8') as f:
             json.dump(self._greetings, f, ensure_ascii=False, indent=4)
 
 eating_manager = EatingManager()
+
+__all__ = [
+    eating_manager
+]
