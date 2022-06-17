@@ -10,7 +10,7 @@ from nonebot_plugin_apscheduler import scheduler
 from .config import Meals
 from .data_source import eating_manager
 
-__what2eat_version__ = "v0.3.0rc1"
+__what2eat_version__ = "v0.3.0"
 __what2eat_notes__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot恰什么
@@ -29,8 +29,8 @@ basic_add = on_command("加菜", permission=SUPERUSER, priority=15, block=True)
 show_group_menu = on_command("菜单", aliases={"群菜单", "查看菜单"}, permission=GROUP, priority=15, block=True)
 show_basic_menu = on_command("基础菜单", permission=GROUP, priority=15, block=True)
 
-greeting_on = on_command("开启吃饭小助手", aliases={"启用吃饭小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
-greeting_off = on_command("关闭吃饭小助手", aliases={"禁用吃饭小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
+greeting_on = on_command("开启小助手", aliases={"启用小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
+greeting_off = on_command("关闭小助手", aliases={"禁用小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
 add_greeting = on_command("添加问候", aliases={"添加问候语"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
 remove_greeting = on_command("删除问候", aliases={"删除问候语", "移除问候", "移除问候语"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
 

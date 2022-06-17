@@ -1,5 +1,5 @@
 <div align="center">
-    <img width="200" src="what2eat_logo.png" alt="logo">
+    <img width="200" src="starving_logo.gif" alt="logo">
 
 # What to Eat
 
@@ -34,11 +34,11 @@ _🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
 
 ## 版本
 
-v0.3.0rc1
+v0.3.0
 
-⚠ 适配nonebot2-2.0.0beta.2+；
+⚠ 适配nonebot2-2.0.0beta.2+
 
-[更新日志](https://github.com/KafCoppelia/nonebot_plugin_what2eat/releases/tag/v0.3.0rc1)
+[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.0)
 
 ## 安装
 
@@ -65,11 +65,11 @@ v0.3.0rc1
     SUPERUSERS={"12345678"}                       # 同nonebot超管配置
     ```
 
-3. 群管理可自行添加或移除群特色菜单（`eating.json`下`[group_food][group_id]`）；超管可添加或移除基础菜单（`[basic_food]`）；
+3. 群管理可自行添加或移除群特色菜单（位于`eating.json`下`[group_food][group_id]`）；超管可添加或移除基础菜单（`[basic_food]`）；
 
 4. 各群特色菜单相互独立；各群每个时间段询问Bot建议次数独立；Bot会综合各群菜单+基础菜单给出建议；
 
-5. 吃饭小助手：每天7、12、15、18、22点群发问候语提醒群友吃饭/摸鱼/下班，`GROUPS_ID`设置常开的群号列表（或集合），每次启动插件时置`True`，形如：
+5. 吃饭小助手：每天7、12、15、18、22点群发问候语提醒群友吃饭/摸鱼/下班，`GREETING_GROUPS_ID`设置常开的群号列表（或集合），每次启动插件时将置`True`，形如：
 
     ```python
     GREETING_GROUPS_ID=["123456789", "987654321"] # 名字长防止与其他插件配置名相同
@@ -77,7 +77,7 @@ v0.3.0rc1
 
     ⚠ 群吃饭小助手启用配置存于`greetings.json`的`groups_id`字段
 
-6. 初次使用该插件时，若不存在`eating.json`与`greetings.json`，设置`USE_PRESET_MENU`及`USE_PRESET_GREETINGS`可从仓库中尝试下载；当下载失败会写入初始键值。
+6. 初次使用该插件时，若不存在`eating.json`与`greetings.json`文件，设置`USE_PRESET_MENU`及`USE_PRESET_GREETINGS`可从仓库中尝试下载；当下载失败会写入初始键值。
 
     ```python
     USE_PRESET_MENU=false
@@ -106,7 +106,7 @@ v0.3.0rc1
 
 7. [管理员或超管] 添加/删除吃饭小助手问候语：[添加/删除/移除问候 时段 问候语]；
 
-    ⚠ 添加/移除问候操作可一步步进行，或一次性输入两或三个命令；可取消操作
+    ⚠ 添加/移除问候操作可一步步进行，或一次性输入两或三个命令；可中途取消操作
 
 ## 效果
 
@@ -162,7 +162,7 @@ v0.3.0rc1
 
     A：你好 已加入 摸鱼问候~
 
-## 本插件改自：
+## 本插件改自
 
 [HoshinoBot-whattoeat](https://github.com/pcrbot/whattoeat)
 
