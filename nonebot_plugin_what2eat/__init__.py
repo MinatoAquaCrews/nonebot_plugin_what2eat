@@ -1,19 +1,16 @@
 from typing import Coroutine, Any
-from nonebot import on_command, on_regex
+from nonebot import get_bot, on_command, on_regex
 from nonebot.typing import T_State
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP, GROUP_ADMIN, GROUP_OWNER, Message, MessageEvent, GroupMessageEvent
 from nonebot.params import Depends, Arg, ArgStr, CommandArg, RegexMatched
 from nonebot.matcher import Matcher
 from nonebot.log import logger
-from nonebot import require, get_bot
+from nonebot_plugin_apscheduler import scheduler
 from .config import Meals
 from .data_source import eating_manager
 
-greeting_helper = require("nonebot_plugin_apscheduler").scheduler
-eating_helper = require("nonebot_plugin_apscheduler").scheduler
-
-__what2eat_version__ = "v0.3.0a3"
+__what2eat_version__ = "v0.3.0rc1"
 __what2eat_notes__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot恰什么
@@ -214,13 +211,13 @@ async def handle_remove_greeting(state: T_State, index: int = Arg()):
 
 # ------------------------- Schedulers -------------------------
 # 重置吃什么次数，包括夜宵
-@eating_helper.scheduled_job("cron", hour="6,11,17,22", minute=0, misfire_grace_time=60)
+@scheduler.scheduled_job("cron", hour="6,11,17,22", minute=0, misfire_grace_time=60)
 async def _():
     eating_manager.reset_count()
     logger.info("今天吃什么次数已刷新")
 
 # 早餐提醒
-@greeting_helper.scheduled_job("cron", hour=7, minute=0, misfire_grace_time=60)
+@scheduler.scheduled_job("cron", hour=7, minute=0, misfire_grace_time=60)
 async def time_for_breakfast():
     bot = get_bot()
     msg = eating_manager.get_greeting(Meals.BREAKFAST)
@@ -232,7 +229,7 @@ async def time_for_breakfast():
         logger.info(f"已群发早餐提醒")
 
 # 午餐提醒
-@greeting_helper.scheduled_job("cron", hour=12, minute=0, misfire_grace_time=60)
+@scheduler.scheduled_job("cron", hour=12, minute=0, misfire_grace_time=60)
 async def time_for_lunch():
     bot = get_bot()
     msg = eating_manager.get_greeting(Meals.LUNCH)
@@ -244,7 +241,7 @@ async def time_for_lunch():
         logger.info(f"已群发午餐提醒")
 
 # 下午茶/摸鱼提醒
-@greeting_helper.scheduled_job("cron", hour=15, minute=0, misfire_grace_time=60)
+@scheduler.scheduled_job("cron", hour=15, minute=0, misfire_grace_time=60)
 async def time_for_snack():
     bot = get_bot()
     msg = eating_manager.get_greeting(Meals.SNACK)
@@ -256,7 +253,7 @@ async def time_for_snack():
         logger.info(f"已群发摸鱼提醒")
 
 # 晚餐提醒
-@greeting_helper.scheduled_job("cron", hour=18, minute=0, misfire_grace_time=60)
+@scheduler.scheduled_job("cron", hour=18, minute=0, misfire_grace_time=60)
 async def time_for_dinner():
     bot = get_bot()
     msg = eating_manager.get_greeting(Meals.DINNER)
@@ -268,7 +265,7 @@ async def time_for_dinner():
         logger.info(f"已群发晚餐提醒")
 
 # 夜宵提醒
-@greeting_helper.scheduled_job("cron", hour=22, minute=0, misfire_grace_time=60)
+@scheduler.scheduled_job("cron", hour=22, minute=0, misfire_grace_time=60)
 async def time_for_midnight():
     bot = get_bot()
     msg = eating_manager.get_greeting(Meals.MIDNIGHT)

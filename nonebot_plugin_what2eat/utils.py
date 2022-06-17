@@ -30,7 +30,10 @@ def do_compatible(new_eating_json: Path, new_greeting_json: Path) -> None:
             with new_eating_json.open("r", encoding="utf-8") as f:
                 # Change key value
                 _f: Dict[str, Union[List[str], Dict[str, Union[Dict[str, List[int]], List[str]]]]] = json.load(f)
-                _f["count"] = _f.pop("eating")
+                try:
+                    _f["count"] = _f.pop("eating")
+                except KeyError as e:
+                    logger.warning(f"Key error missing: {e}")
             
             save_json(new_eating_json, _f)
     
@@ -44,6 +47,8 @@ def do_compatible(new_eating_json: Path, new_greeting_json: Path) -> None:
         if not res.exists():
             logger.warning(f"Create json files of new version failed!")
             raise PathError
+    
+    logger.debug("Compatible work success!")
 
 __all__ = [
     do_compatible

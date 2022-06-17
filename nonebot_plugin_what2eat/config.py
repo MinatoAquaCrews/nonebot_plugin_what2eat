@@ -17,10 +17,6 @@ class PluginConfig(BaseModel, extra=Extra.ignore):
     eating_limit: int = 5
     greeting_groups_id: Set[str] = set()
     superusers: Set[str] = set()
-    '''
-        v0.3.0 is compatible with configure json file of version 0.2.x, but will be deprecated in next version
-    '''
-    use_compatible: bool = True
     
 class Meals(Enum):
     BREAKFAST = ["breakfast", "早餐", "早饭"]

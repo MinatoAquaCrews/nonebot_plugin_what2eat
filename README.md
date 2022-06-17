@@ -1,4 +1,5 @@
 <div align="center">
+    <img width="200" src="starving.gif" alt="logo"></br>
 
 # What to Eat
 
@@ -19,7 +20,7 @@ _🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
     <img src="https://img.shields.io/badge/nonebot2-2.0.0beta.2+-green">
   </a>
   
-  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.0a3">
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.0rc1">
     <img src="https://img.shields.io/github/v/release/MinatoAquaCrews/nonebot_plugin_what2eat?color=orange">
   </a>
 
@@ -33,11 +34,11 @@ _🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
 
 ## 版本
 
-v0.3.0a3
+v0.3.0rc1
 
 ⚠ 适配nonebot2-2.0.0beta.2+；
 
-[更新日志](https://github.com/KafCoppelia/nonebot_plugin_what2eat/releases/tag/v0.3.0a3)
+[更新日志](https://github.com/KafCoppelia/nonebot_plugin_what2eat/releases/tag/v0.3.0rc1)
 
 ## 安装
 
@@ -62,7 +63,6 @@ v0.3.0a3
     EATING_LIMIT=99                               # 每个时段吃什么的次数上限，默认5次；每日6点、11点、17点、22点自动刷新
     GREETING_GROUPS_ID=["123456789", "987654321"] # 默认开启小助手群组，或{"123456789", "987654321"}
     SUPERUSERS={"12345678"}                       # 同nonebot超管配置
-    USE_COMPATIBLE=true                           # 是否启用兼容`v0.2.x`的配置，会在初始化时自动修改原配置文件及内键值至`v0.3.0`所需的配置文件及键值，默认为True
     ```
 
 3. 群管理可自行添加或移除群特色菜单（`eating.json`下`[group_food][group_id]`）；超管可添加或移除基础菜单（`[basic_food]`）；
@@ -85,11 +85,10 @@ v0.3.0a3
     ```
 
     ⚠ 若存在`eating.json`与`greetings.json`，不会从仓库中下载，仅检查是否缺少必要的键值，并补写初始键值
+
     ⚠ 从仓库下载会**覆写**原有配置！建议老用户按需开启从仓库下载设置
 
-7. `v0.3.0`会兼容`v0.2.x`，在插件启动时通过设置`USE_COMPATIBLE`以启用自动兼容功能：检测`v0.2.x`的配置文件，将其自动改为当前版本的配置文件及键值。但当原`v0.2.x`的配置文件不存在时则忽略。
-    
-    ⚠ 后续版本将弃用兼容
+    ⚠ `v0.3.0`版本会兼容`v0.2.x`，在插件启动时启用自动兼容：检测`v0.2.x`的配置文件，将其自动改为当前版本的配置文件及键值。但当原`v0.2.x`的配置文件不存在时则忽略。后续版本将弃用兼容，请注意
 
 ## 命令
 
