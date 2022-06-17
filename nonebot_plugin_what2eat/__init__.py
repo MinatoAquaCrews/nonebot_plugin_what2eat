@@ -20,7 +20,7 @@ __what2eat_notes__ = f'''
 [菜单]      查看群菜单
 [基础菜单]   查看基础菜单
 [开启/关闭小助手] 开启/关闭吃饭小助手
-[添加/删除问候 问候语] 添加/删除吃饭小助手问候语'''.strip()
+[添加/删除问候 时段 问候语] 添加/删除吃饭小助手问候语'''.strip()
 
 what2eat = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)吃(什么|啥|点啥)(帮助)?$", priority=15)
 group_add = on_command("添加", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
