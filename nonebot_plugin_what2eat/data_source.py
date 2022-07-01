@@ -331,19 +331,7 @@ class EatingManager:
         if meal.value[0] in self._greetings:
             if len(self._greetings.get(meal.value[0])) > 0:
                 greetings: List[str] = self._greetings.get(meal.value[0])
-                if meal.value[0] == "breakfast":
-                    img_path: Path = what2eat_config.what2eat_path / "img" / "breakfast"
-                    files: List[str] = [str(f) for f in img_path.iterdir() if f.is_file()]
-                    image: Path = img_path / random.choice(files)
-                    return MessageSegment.text(random.choice(greetings)) + MessageSegment.image(image)
-                
-                elif meal.value[0] == "snack":
-                    img_path: Path = what2eat_config.what2eat_path / "img" / "snack"
-                    files: List[str] = [str(f) for f in img_path.iterdir() if f.is_file()]
-                    image: Path = img_path / random.choice(files)
-                    return MessageSegment.text(random.choice(greetings)) + MessageSegment.image(image)
-                else:
-                    return MessageSegment.text(random.choice(greetings))
+                return MessageSegment.text(random.choice(greetings))
         
         return None
 
