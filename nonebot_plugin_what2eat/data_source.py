@@ -1,4 +1,6 @@
 from nonebot.adapters.onebot.v11 import MessageEvent, GroupMessageEvent, PrivateMessageEvent, MessageSegment
+from nonebot.adapters.onebot.exception import ActionFailed
+from nonebot import get_bot, logger
 import random
 from pathlib import Path
 from enum import Enum
@@ -248,21 +250,6 @@ class EatingManager:
         
         self._save()
         
-    def get_greeting(self, meal: Meals) -> Union[str, None]:
-        '''
-            干饭/摸鱼小助手: Get greeting, return None when empty
-        '''
-        if not self._init_ok:
-            self._init_json()
-        if meal.value[0] in self._greetings:
-            if len(self._greetings.get(meal.value[0])) > 0:
-                greetings = self._greetings[meal.value[0]]
-                return random.choice(greetings)
-            else:
-                return None
-        
-        return None
-        
     def which_meals(self, input_cn: str) -> Union[Meals, None]:
         '''
             Judge which meals is user's input indicated
@@ -322,6 +309,43 @@ class EatingManager:
             self._save()
         
         return MessageSegment.text(f"{greeting} 已从 {meal.value[1]} 问候中移除~")
+
+    async def do_greeting(self, meal: Meals) -> None:
+        bot = get_bot()
+        msg = self.get_greeting(meal)
+        if msg and len(list(eating_manager._greetings["groups_id"])) > 0:
+            for gid in eating_manager._greetings["groups_id"]:
+                if eating_manager._greetings["groups_id"].get(gid, False):
+                    try:
+                        await bot.send_group_msg(group_id=int(gid), message=msg)
+                    except ActionFailed as e:
+                        logger.warning(f"发送群 {gid} 失败：{e}")
+    
+    def get_greeting(self, meal: Meals) -> Union[MessageSegment, None]:
+        '''
+            干饭/摸鱼小助手: Get greeting, return None when empty
+        '''
+        if not self._init_ok:
+            self._init_json()
+            
+        if meal.value[0] in self._greetings:
+            if len(self._greetings.get(meal.value[0])) > 0:
+                greetings: List[str] = self._greetings.get(meal.value[0])
+                if meal.value[0] == "breakfast":
+                    img_path: Path = what2eat_config.what2eat_path / "img" / "breakfast"
+                    files: List[str] = [str(f) for f in img_path.iterdir() if f.is_file()]
+                    image: Path = img_path / random.choice(files)
+                    return MessageSegment.text(random.choice(greetings)) + MessageSegment.image(image)
+                
+                elif meal.value[0] == "snack":
+                    img_path: Path = what2eat_config.what2eat_path / "img" / "snack"
+                    files: List[str] = [str(f) for f in img_path.iterdir() if f.is_file()]
+                    image: Path = img_path / random.choice(files)
+                    return MessageSegment.text(random.choice(greetings)) + MessageSegment.image(image)
+                else:
+                    return MessageSegment.text(random.choice(greetings))
+        
+        return None
 
     def _save(self) -> None:
         '''
