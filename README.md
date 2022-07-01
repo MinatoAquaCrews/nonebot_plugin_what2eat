@@ -20,7 +20,7 @@ _🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
     <img src="https://img.shields.io/badge/nonebot2-2.0.0beta.2+-green">
   </a>
   
-  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.0">
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.1">
     <img src="https://img.shields.io/github/v/release/MinatoAquaCrews/nonebot_plugin_what2eat?color=orange">
   </a>
 
@@ -34,11 +34,11 @@ _🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
 
 ## 版本
 
-v0.3.0
+v0.3.1
 
 ⚠ 适配nonebot2-2.0.0beta.2+
 
-[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.0)
+[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.1)
 
 ## 安装
 
@@ -88,7 +88,7 @@ v0.3.0
 
     ⚠ 从仓库下载会**覆写**原有配置！建议老用户按需开启从仓库下载设置
 
-    ⚠ `v0.3.0`版本会兼容`v0.2.x`，在插件启动时启用自动兼容：检测`v0.2.x`的配置文件，将其自动改为当前版本的配置文件及键值。但当原`v0.2.x`的配置文件不存在时则忽略。后续版本将弃用兼容，请注意
+    ⚠ `v0.3.1`版本会兼容`v0.2.x`，在插件启动时启用自动兼容：检测`v0.2.x`的配置文件，将其自动改为当前版本的配置文件及键值。但当原`v0.2.x`的配置文件不存在时则忽略。后续版本将弃用兼容，请注意
 
 ## 命令
 

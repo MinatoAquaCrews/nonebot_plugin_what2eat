@@ -1,24 +1,24 @@
 from typing import Coroutine, Any
-from nonebot import get_bot, on_command, on_regex
+from nonebot import on_command, on_regex
 from nonebot.typing import T_State
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP, GROUP_ADMIN, GROUP_OWNER, Message, MessageEvent, GroupMessageEvent
 from nonebot.params import Depends, Arg, ArgStr, CommandArg, RegexMatched
 from nonebot.matcher import Matcher
-from nonebot.log import logger
+from nonebot import logger
 from nonebot_plugin_apscheduler import scheduler
 from .config import Meals
 from .data_source import eating_manager
 
-__what2eat_version__ = "v0.3.0"
+__what2eat_version__ = "v0.3.1"
 __what2eat_notes__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot恰什么
 [添加 xx]   添加菜品至群菜单
 [移除 xx]   从菜单移除菜品
 [加菜 xx]   添加菜品至基础菜单
-[菜单]      查看群菜单
-[基础菜单]   查看基础菜单
+[菜单]       查看群菜单
+[基础菜单]  查看基础菜单
 [开启/关闭小助手] 开启/关闭吃饭小助手
 [添加/删除问候 时段 问候语] 添加/删除吃饭小助手问候语'''.strip()
 
@@ -219,59 +219,29 @@ async def _():
 # 早餐提醒
 @scheduler.scheduled_job("cron", hour=7, minute=0, misfire_grace_time=60)
 async def time_for_breakfast():
-    bot = get_bot()
-    msg = eating_manager.get_greeting(Meals.BREAKFAST)
-    if msg and len(eating_manager._greetings["groups_id"]) > 0:
-        for gid in eating_manager._greetings["groups_id"]:
-            if eating_manager._greetings["groups_id"].get(gid, False):
-                await bot.send_group_msg(group_id=int(gid), message=msg)
-        
-        logger.info(f"已群发早餐提醒")
+    await eating_manager.do_greeting(Meals.BREAKFAST)
+    logger.info(f"已群发早餐提醒")
 
 # 午餐提醒
 @scheduler.scheduled_job("cron", hour=12, minute=0, misfire_grace_time=60)
 async def time_for_lunch():
-    bot = get_bot()
-    msg = eating_manager.get_greeting(Meals.LUNCH)
-    if msg and len(eating_manager._greetings["groups_id"]) > 0:
-        for gid in eating_manager._greetings["groups_id"]:
-            if eating_manager._greetings["groups_id"].get(gid, False):
-                await bot.send_group_msg(group_id=int(gid), message=msg)
-        
-        logger.info(f"已群发午餐提醒")
+    await eating_manager.do_greeting(Meals.LUNCH)
+    logger.info(f"已群发午餐提醒")
 
 # 下午茶/摸鱼提醒
 @scheduler.scheduled_job("cron", hour=15, minute=0, misfire_grace_time=60)
 async def time_for_snack():
-    bot = get_bot()
-    msg = eating_manager.get_greeting(Meals.SNACK)
-    if msg and len(eating_manager._greetings["groups_id"]) > 0:
-        for gid in eating_manager._greetings["groups_id"]:
-            if eating_manager._greetings["groups_id"].get(gid, False):
-                await bot.send_group_msg(group_id=int(gid), message=msg)
-        
-        logger.info(f"已群发摸鱼提醒")
+    await eating_manager.do_greeting(Meals.SNACK)
+    logger.info(f"已群发摸鱼提醒")
 
 # 晚餐提醒
 @scheduler.scheduled_job("cron", hour=18, minute=0, misfire_grace_time=60)
 async def time_for_dinner():
-    bot = get_bot()
-    msg = eating_manager.get_greeting(Meals.DINNER)
-    if msg and len(eating_manager._greetings["groups_id"]) > 0:
-        for gid in eating_manager._greetings["groups_id"]:
-            if eating_manager._greetings["groups_id"].get(gid, False):
-                await bot.send_group_msg(group_id=int(gid), message=msg)
-        
-        logger.info(f"已群发晚餐提醒")
+    await eating_manager.do_greeting(Meals.DINNER)
+    logger.info(f"已群发晚餐提醒")
 
 # 夜宵提醒
 @scheduler.scheduled_job("cron", hour=22, minute=0, misfire_grace_time=60)
 async def time_for_midnight():
-    bot = get_bot()
-    msg = eating_manager.get_greeting(Meals.MIDNIGHT)
-    if msg and len(eating_manager._greetings["groups_id"]) > 0:
-        for gid in eating_manager._greetings["groups_id"]:
-            if eating_manager._greetings["groups_id"].get(gid, False):
-                await bot.send_group_msg(group_id=int(gid), message=msg)
-        
-        logger.info(f"已群发夜宵提醒")
+    await eating_manager.do_greeting(Meals.MIDNIGHT)
+    logger.info(f"已群发夜宵提醒")
