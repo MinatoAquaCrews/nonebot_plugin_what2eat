@@ -106,13 +106,13 @@ async def what2eat_check() -> None:
             with eating_json.open("r", encoding="utf-8") as f:
                 _f: Dict[str, Union[List[str], Dict[str, Union[Dict[str, List[int]], List[str]]]]] = json.load(f)
                 if not _f.get("basic_food", False):
-                    _f.update({"basic_food", []})
+                    _f.update({"basic_food":[]})
                 
                 if not _f.get("group_food", False):
-                    _f.update({"group_food", {}})
+                    _f.update({"group_food":{}})
                     
                 if not _f.get("count", False):
-                    _f.update({"count", {}})
+                    _f.update({"count":{}})
                 
             save_json(eating_json, _f)
     
@@ -130,7 +130,7 @@ async def what2eat_check() -> None:
                 _f: Dict[str, Union[List[str], Dict[str, bool]]] = json.load(f)
                 for meal in Meals:
                     if _f.get(meal.value[0], False):
-                        _f.update({meal.value[0], []})
+                        _f.update({meal.value[0]:[]})
                 
                 if not _f.get("groups_id", False):
                     _f["groups_id"] = {}
