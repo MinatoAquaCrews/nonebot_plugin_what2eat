@@ -1,11 +1,11 @@
 <div align="center">
     <img width="200" src="starving_logo.gif" alt="logo">
 
-# What to Eat
+# What to Eat/Drink
 
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable-next-line MD036 -->
-_🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
+_🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜🌮🍔🧋🧃_
 <!-- prettier-ignore-end -->
 
 </div>
@@ -17,10 +17,10 @@ _🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
   </a>
   
   <a href="https://github.com/nonebot/nonebot2">
-    <img src="https://img.shields.io/badge/nonebot2-2.0.0beta.2+-green">
+    <img src="https://img.shields.io/badge/nonebot2-2.0.0b3+-green">
   </a>
   
-  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.2">
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.3a1">
     <img src="https://img.shields.io/github/v/release/MinatoAquaCrews/nonebot_plugin_what2eat?color=orange">
   </a>
 
@@ -30,21 +30,19 @@ _🍔🌮🍜🍮🍣🍻🍩 今天吃什么 🍩🍻🍣🍮🍜🌮🍔_
   
 </p>
 
-</p>
-
 ## 版本
 
-v0.3.2
+dev版，请勿使用 今天喝什么！
 
-⚠ 适配nonebot2-2.0.0beta.2+
+⚠ 适配nonebot2-2.0.0b3+
 
-[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.2)
+[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.3a1)
 
 ## 安装
 
 1. 通过`pip`或`nb`安装；
 
-2. 数据默认位于`./resource`下`eating.json`与`greetings.json`，可通过设置`env`下`WHAT2EAT_PATH`更改；基础菜单、群特色菜单及群友询问Bot次数会记录在该文件中：
+2. 数据默认位于`./resource`下`eating.json`、`drinking.json`与`greetings.json`，可通过设置`env`下`WHAT2EAT_PATH`更改；基础菜单、群特色菜单及群友询问Bot次数会记录在该文件中：
 
     ```python
     WHAT2EAT_PATH="your-path-to-resource"
@@ -52,9 +50,11 @@ v0.3.2
 
 ## 功能
 
-1. 选择恐惧症？让Bot建议你今天吃什么！
+1. 🔥 **重磅更新** 今天喝什么！
 
-2. ⚠ 插件配置：
+2. 选择恐惧症？让Bot建议你今天吃什么！
+
+3. ⚠ 插件配置：
    
     ``` python
     WHAT2EAT_PATH="your-path-to-resource"         # 资源路径
@@ -65,11 +65,11 @@ v0.3.2
     SUPERUSERS={"12345678"}                       # 同nonebot超管配置
     ```
 
-3. 群管理可自行添加或移除群特色菜单（位于`eating.json`下`[group_food][group_id]`）；超管可添加或移除基础菜单（`[basic_food]`）；
+4. 群管理可自行添加或移除群特色菜单（位于`eating.json`下`[group_food][group_id]`）；超管可添加或移除基础菜单（`[basic_food]`）；
 
-4. 各群特色菜单相互独立；各群每个时间段询问Bot建议次数独立；Bot会综合各群菜单+基础菜单给出建议；
+5. 各群特色菜单相互独立；各群每个时间段询问Bot建议次数独立；Bot会综合各群菜单+基础菜单给出建议；
 
-5. 吃饭小助手：每天7、12、15、18、22点群发问候语提醒群友吃饭/摸鱼/下班，`GREETING_GROUPS_ID`设置常开的群号列表（或集合），每次启动插件时将置`True`，形如：
+6. 吃饭小助手：每天7、12、15、18、22点群发问候语提醒群友吃饭/摸鱼/下班，`GREETING_GROUPS_ID`设置常开的群号列表（或集合），每次启动插件时将置`True`，形如：
 
     ```python
     GREETING_GROUPS_ID=["123456789", "987654321"] # 名字长防止与其他插件配置名相同
@@ -77,7 +77,7 @@ v0.3.2
 
     ⚠ 群吃饭小助手启用配置存于`greetings.json`的`groups_id`字段
 
-6. 初次使用该插件时，若不存在`eating.json`与`greetings.json`文件，设置`USE_PRESET_MENU`及`USE_PRESET_GREETINGS`可从仓库中尝试下载；当下载失败会写入初始键值。
+7. 初次使用该插件时，若不存在`eating.json`与`greetings.json`文件，设置`USE_PRESET_MENU`及`USE_PRESET_GREETINGS`可从仓库中尝试下载；当下载失败会写入初始键值。
 
     ```python
     USE_PRESET_MENU=false
@@ -94,17 +94,19 @@ v0.3.2
 
 1. 吃什么：今天吃什么、中午吃啥、今晚吃啥、中午吃什么、晚上吃啥、晚上吃什么、夜宵吃啥……
 
-2. [管理员或超管] 添加或移除群菜名：[添加/移除 菜名]；
+2. 喝什么：今天喝什么、中午喝啥、今晚喝啥、中午喝什么、晚上喝啥、晚上喝什么、夜宵喝啥……
 
-3. 查看群菜单：[菜单/群菜单/查看菜单]；
+3. [管理员或超管] 添加或移除群菜名：[添加/移除 菜名]；
 
-4. [超管] 添加至基础菜单：[加菜 菜名]；
+4. 查看群菜单：[菜单/群菜单/查看菜单]；
 
-5. 查看基础菜单：[基础菜单]；
+5. [超管] 添加至基础菜单：[加菜 菜名]；
 
-6. [管理员或超管] 开启/关闭吃饭小助手：[开启/启用/关闭/禁用小助手]；
+6. 查看基础菜单：[基础菜单]；
 
-7. [管理员或超管] 添加/删除吃饭小助手问候语：[添加/删除/移除问候 时段 问候语]；
+7. [管理员或超管] 开启/关闭吃饭小助手：[开启/启用/关闭/禁用小助手]；
+
+8. [管理员或超管] 添加/删除吃饭小助手问候语：[添加/删除/移除问候 时段 问候语]；
 
     ⚠ 添加/移除问候操作可一步步进行，或一次性输入两或三个命令；可中途取消操作
 
