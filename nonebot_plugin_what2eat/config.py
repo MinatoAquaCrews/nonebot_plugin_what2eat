@@ -3,8 +3,8 @@ from enum import Enum
 from pydantic import BaseModel, Extra
 from typing import List, Dict, Set, Union, Any
 import httpx
-from nonebot import get_driver
-from nonebot import logger
+from nonebot import get_driver, logger
+from .utils import save_json
 try:
     import ujson as json
 except ModuleNotFoundError:
@@ -48,10 +48,6 @@ async def download_url(url: str) -> Union[Any, None]:
     
     logger.warning(f"Abort downloading")
     return None
-
-def save_json(_file: Path, _data: Any) -> None:
-    with open(_file, 'w', encoding='utf-8') as f:
-        json.dump(_data, f, ensure_ascii=False, indent=4)
         
 def write_init_keys(_file: Path, _name: str) -> None:
     '''

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Any
 from nonebot import logger
 from pydantic.errors import PathError
 from .config import what2eat_config, save_json
@@ -7,7 +7,15 @@ try:
     import ujson as json
 except ModuleNotFoundError:
     import json
+    
+def save_json(_file: Path, _data: Any) -> None:
+    with open(_file, 'w', encoding='utf-8') as f:
+        json.dump(_data, f, ensure_ascii=False, indent=4)
   
+def load_json(_file: Path) -> Any:
+    with open(_file, 'r', encoding='utf-8') as f:
+        return json.load(f)
+        
 def do_compatible(new_eating_json: Path, new_greeting_json: Path) -> None:
     '''
         v0.3.0 is compatible with configure json file of version 0.2.x, but will be deprecated in next version
@@ -51,5 +59,5 @@ def do_compatible(new_eating_json: Path, new_greeting_json: Path) -> None:
     logger.debug("Compatible work success!")
 
 __all__ = [
-    do_compatible
+    save_json, load_json, do_compatible
 ]
