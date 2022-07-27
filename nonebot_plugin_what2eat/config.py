@@ -1,10 +1,9 @@
 from pathlib import Path
-from enum import Enum
 from pydantic import BaseModel, Extra
 from typing import List, Dict, Set, Union, Any
 import httpx
-from nonebot import get_driver
-from nonebot import logger
+from nonebot import get_driver, logger
+from .utils import save_json, Meals
 try:
     import ujson as json
 except ModuleNotFoundError:
@@ -17,13 +16,6 @@ class PluginConfig(BaseModel, extra=Extra.ignore):
     eating_limit: int = 5
     greeting_groups_id: Set[str] = set()
     superusers: Set[str] = set()
-    
-class Meals(Enum):
-    BREAKFAST = ["breakfast", "早餐", "早饭"]
-    LUNCH = ["lunch", "午餐", "午饭", "中餐"]
-    SNACK = ["snack", "摸鱼", "下午茶", "饮茶"]
-    DINNER = ["dinner", "晚餐", "晚饭"]
-    MIDNIGHT = ["midnight", "夜宵", "宵夜"]
     
 driver = get_driver()
 what2eat_config: PluginConfig = PluginConfig.parse_obj(driver.config.dict())
@@ -43,21 +35,17 @@ async def download_url(url: str) -> Union[Any, None]:
                 if response.status_code != 200:
                     continue
                 return response.json()
-            except Exception as e:
-                logger.warning(f"Error occured when downloading {url}, {i+1}/3: {e}")
+            except Exception:
+                logger.warning(f"Error occured when downloading {url}, retry: {i+1}/3")
     
     logger.warning(f"Abort downloading")
     return None
-
-def save_json(_file: Path, _data: Any) -> None:
-    with open(_file, 'w', encoding='utf-8') as f:
-        json.dump(_data, f, ensure_ascii=False, indent=4)
         
 def write_init_keys(_file: Path, _name: str) -> None:
     '''
         Write ALL the initial keys
     '''
-    _data = {}
+    _data = dict()
     if _name == "eating.json":
         _data["basic_food"] = []
         _data["group_food"] = {}
@@ -106,13 +94,13 @@ async def what2eat_check() -> None:
             with eating_json.open("r", encoding="utf-8") as f:
                 _f: Dict[str, Union[List[str], Dict[str, Union[Dict[str, List[int]], List[str]]]]] = json.load(f)
                 if not _f.get("basic_food", False):
-                    _f.update({"basic_food", []})
+                    _f.update({"basic_food": []})
                 
                 if not _f.get("group_food", False):
-                    _f.update({"group_food", {}})
+                    _f.update({"group_food": {}})
                     
                 if not _f.get("count", False):
-                    _f.update({"count", {}})
+                    _f.update({"count": {}})
                 
             save_json(eating_json, _f)
     
@@ -130,7 +118,7 @@ async def what2eat_check() -> None:
                 _f: Dict[str, Union[List[str], Dict[str, bool]]] = json.load(f)
                 for meal in Meals:
                     if _f.get(meal.value[0], False):
-                        _f.update({meal.value[0], []})
+                        _f.update({meal.value[0]: []})
                 
                 if not _f.get("groups_id", False):
                     _f["groups_id"] = {}
@@ -152,5 +140,5 @@ async def what2eat_check() -> None:
         save_json(greetings_json, _f)
 
 __all__ = [
-    Meals, what2eat_config, save_json
+    what2eat_config
 ]

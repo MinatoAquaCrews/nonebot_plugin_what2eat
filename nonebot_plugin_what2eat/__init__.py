@@ -7,10 +7,10 @@ from nonebot.params import Depends, Arg, ArgStr, CommandArg, RegexMatched
 from nonebot.matcher import Matcher
 from nonebot import logger
 from nonebot_plugin_apscheduler import scheduler
-from .config import Meals
+from .utils import Meals
 from .data_source import eating_manager
 
-__what2eat_version__ = "v0.3.2"
+__what2eat_version__ = "v0.3.3a1"
 __what2eat_notes__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot恰什么
@@ -52,7 +52,7 @@ async def _(event: GroupMessageEvent, args: Message = CommandArg()):
     else:
         await group_add.finish("添加菜品参数错误~")
     
-    msg = eating_manager.add_group_food(new_food, event)
+    msg = eating_manager.add_group_food(event, new_food)
 
     await group_add.finish(msg)
 
