@@ -7,14 +7,13 @@ from nonebot.params import Depends, Arg, ArgStr, CommandArg, RegexMatched
 from nonebot.matcher import Matcher
 from nonebot import logger
 from nonebot_plugin_apscheduler import scheduler
-from .config import Meals
-from .data_source import eating_manager, drinking_manager
+from .utils import Meals
+from .data_source import eating_manager
 
 __what2eat_version__ = "v0.3.3a1"
 __what2eat_notes__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot恰什么
-[xx喝xx]    问bot喝什么
 [添加 xx]   添加菜品至群菜单
 [移除 xx]   从菜单移除菜品
 [加菜 xx]   添加菜品至基础菜单
@@ -24,7 +23,6 @@ __what2eat_notes__ = f'''
 [添加/删除问候 时段 问候语] 添加/删除吃饭小助手问候语'''.strip()
 
 what2eat = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)吃(什么|啥|点啥)(帮助)?$", priority=15)
-what2drink = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)喝(什么|啥|点啥)(帮助)$", priority=15)
 group_add = on_command("添加", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
 group_remove = on_command("移除", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
 basic_add = on_command("加菜", permission=SUPERUSER, priority=15, block=True)
@@ -43,14 +41,6 @@ async def _(event: MessageEvent, args: str = RegexMatched()):
     
     msg = eating_manager.get2eat(event)
     await what2eat.finish(msg)
-    
-@what2drink.handle()
-async def _(event: MessageEvent, args: str = RegexMatched()):
-    if args[-2:] == "帮助":
-        await what2eat.finish(__what2eat_notes__)
-        
-    msg = drinking_manager.get2drink(event)
-    await what2drink.finish(msg)
 
 @group_add.handle()
 async def _(event: GroupMessageEvent, args: Message = CommandArg()):

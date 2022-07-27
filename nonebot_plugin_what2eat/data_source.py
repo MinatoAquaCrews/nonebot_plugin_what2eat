@@ -3,19 +3,9 @@ from nonebot.adapters.onebot.v11 import ActionFailed
 from nonebot import get_bot, logger
 import random
 from pathlib import Path
-from enum import Enum
-from typing import Optional, Union, List, Dict, Tuple
-from .config import Meals, what2eat_config
-from .utils import save_json, load_json, do_compatible
-try:
-    import ujson as json
-except ModuleNotFoundError:
-    import json
-    
-class FoodLoc(Enum):
-    IN_BASIC = "In_Basic"
-    IN_GROUP = "In_Group"
-    NOT_EXISTS = "Not_Exists"
+from typing import Optional, Union, List, Dict
+from .utils import save_json, load_json, Meals, FoodLoc
+from .config import what2eat_config
 
 class EatingManager:
     def __init__(self):
@@ -24,10 +14,6 @@ class EatingManager:
         
         self._eating_json: Path = what2eat_config.what2eat_path / "eating.json"
         self._greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
-        '''
-            Compatible work will be deprecated in next version
-        '''
-        do_compatible(self._eating_json, self._greetings_json)
     
     def _init_data(self, gid: str, uid: Optional[str]) -> None:
         '''
@@ -315,59 +301,9 @@ class EatingManager:
                 return MessageSegment.text(random.choice(greetings))
         
         return None
-    
-class DrinkingManager:
-    def __init__(self):
-        self._eating_json: Path = what2eat_config.what2eat_path / "eating.json"
-        # Only save the drinking esource data, but csave ounting data in eating.json
-        self._drinking_json: Path = what2eat_config.what2eat_path / "drinking.json"
-    
-    def get2drink(self) -> MessageSegment:
-        '''
-            今天喝什么，目前仅概括性地描述如何选择一款具体的饮品，未包括次数的统计
-        '''
-        self._drinking = load_json(self._drinking_json)
-        msg: str = ""
-        
-        # 1. Pick one drink
-        branch, drink = self._pick_one_drink()
-        
-        cup: str = random.choice(self._drinking[branch]["cup"])
-        sugar_level: str = random.choice(self._drinking[branch]["sugar_level"])
-        
-        ice_level: str = self._pick_ice_level(branch, drink)
-        ingredients: List[str] = self._pick_ingredients() # length is 1 to 3
-        
-        msg = f"不如来杯{cup}{sugar_level}{ice_level}{drink}，加"
-        
-        if len(ingredients) == 1:
-            msg += f"{ingredients[0]}吧！"
-        elif len(ingredients) == 2:
-            msg += f"{ingredients[0]}和{ingredients[1]}吧！"
-        else:
-            msg += f"{ingredients[0]}、{ingredients[1]}和{ingredients[2]}吧！"
-        
-        return MessageSegment.text(msg)
-
-    def _pick_one_drink(self) -> Tuple[str, str]:
-        branch: str = random.choice(list(self._drinking.keys()))
-        drinks: List[str] = []
-        for item in self._drinking[branch]["drinks"]:
-            drinks.append(self._drinking[branch]["drinks"][item])
-        
-        drink = random.choice(drinks)
-        return branch, drink
-        
-    def _pick_ice_level(self, _branch: str, _drink: str) -> str:
-        pass
-    
-    def _pick_ingredients(self) -> List[str]:
-        pass
-    
 
 eating_manager = EatingManager()      
-drinking_manager = DrinkingManager()    
 
 __all__ = [
-    eating_manager, drinking_manager
+    eating_manager
 ]
