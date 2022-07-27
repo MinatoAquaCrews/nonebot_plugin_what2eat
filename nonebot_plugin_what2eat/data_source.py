@@ -32,6 +32,10 @@ class EatingManager:
         '''
             今天吃什么
         '''
+        uid = str(event.user_id)
+        gid = str(event.group_id)
+        food_list: List[str] = []
+        
         self._eating = load_json(self._eating_json)
         self._init_data(gid, uid)
             
@@ -40,11 +44,7 @@ class EatingManager:
                 return MessageSegment.text("建议") + MessageSegment.text(random.choice(self._eating["basic_food"]))
             else:
                 return MessageSegment.text("还没有菜单呢，就先饿着肚子吧，请[添加 菜名]🤤")
-            
-        uid = str(event.user_id)
-        gid = str(event.group_id)
-        food_list: List[str] = []
-        
+
         # Check whether is full of stomach
         if self._eating["count"][gid][uid] >= what2eat_config.eating_limit:
             save_json(self._eating_json, self._eating)
@@ -63,8 +63,9 @@ class EatingManager:
                 return MessageSegment.text("还没有菜单呢，就先饿着肚子吧，请[添加 菜名]🤤")
             
             food_list = self._eating["basic_food"].copy()
+            # 取并集
             if len(self._eating["group_food"][gid]) > 0:
-                food_list.extend(self._eating["group_food"][gid])
+                food_list = list(set(food_list).union(set(self._eating["group_food"][gid])))
 
             # Even a food maybe in basic AND group menu, probability of it is doubled
             msg = MessageSegment.text("建议") + MessageSegment.text(random.choice(food_list))
@@ -76,16 +77,17 @@ class EatingManager:
     def _is_food_exists(self, _food: str, gid: Optional[str]) -> FoodLoc:
         '''
             检查菜品是否存在于某个群组
-        '''
-        for food in self._eating["basic_food"]:
-            if food == _food:
-                return FoodLoc.IN_BASIC
-            
+            优先检测是否在群组
+        ''' 
         if isinstance(gid, str):
             if gid in self._eating["group_food"]:
                 for food in self._eating["group_food"][gid]:
                     if food == _food:
                         return FoodLoc.IN_GROUP
+        
+        for food in self._eating["basic_food"]:
+            if food == _food:
+                return FoodLoc.IN_BASIC
         
         return FoodLoc.NOT_EXISTS
 
@@ -118,26 +120,17 @@ class EatingManager:
         '''
         self._eating = load_json(self._eating_json)
         msg: str = ""
-        status: FoodLoc = self._is_food_exists(new_food)
+        status: FoodLoc = self._is_food_exists(new_food, None)
         
         if status == FoodLoc.IN_BASIC:
             msg = f"{new_food} 已在基础菜单中~"
-        elif status == FoodLoc.IN_GROUP:
-            # If food in group menu, move it to basic menu from all groups'. Check all groups' menu.
-            self._food_group2basic(new_food)
         else:
+            # If food in group menu, move it to basic menu from all groups'. Check all groups' menu.
             self._eating["basic_food"].append(new_food)
             msg = f"{new_food} 已加入基础菜单~"
-        
+
         save_json(self._eating_json, self._eating)
         return MessageSegment.text(msg)
-
-    def _food_group2basic(self, _food_to_move: str) -> None:
-        for gid in self._eating["group_food"]:
-            if self._is_food_exists(_food_to_move, gid) == FoodLoc.IN_GROUP:
-                self._eating["group_food"][gid].remove(_food_to_move)
-        
-        self._eating["basic_food"].append(_food_to_move)
 
     def remove_food(self, event: GroupMessageEvent, food_to_remove: str) -> MessageSegment:
         '''
@@ -155,7 +148,6 @@ class EatingManager:
         if status == FoodLoc.IN_GROUP:
             self._eating["group_food"][gid].remove(food_to_remove)
             msg = f"{food_to_remove} 已从群菜单中删除~"
-
         elif status == FoodLoc.IN_BASIC:
             if uid not in what2eat_config.superusers:
                 msg = f"{food_to_remove} 在基础菜单中，非超管不可操作哦~"
@@ -183,7 +175,7 @@ class EatingManager:
     def show_group_menu(self, gid: str) -> MessageSegment:
         msg: str = ""
         self._eating = load_json(self._eating_json)
-        self._init_data(gid)
+        self._init_data(gid, None)
         save_json(self._eating_json, self._eating)
             
         if len(self._eating["group_food"][gid]) > 0:
