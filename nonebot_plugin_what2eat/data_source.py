@@ -63,11 +63,11 @@ class EatingManager:
                 return MessageSegment.text("还没有菜单呢，就先饿着肚子吧，请[添加 菜名]🤤")
             
             food_list = self._eating["basic_food"].copy()
+            
             # 取并集
             if len(self._eating["group_food"][gid]) > 0:
                 food_list = list(set(food_list).union(set(self._eating["group_food"][gid])))
 
-            # Even a food maybe in basic AND group menu, probability of it is doubled
             msg = MessageSegment.text("建议") + MessageSegment.text(random.choice(food_list))
             self._eating["count"][gid][uid] += 1
             save_json(self._eating_json, self._eating)
@@ -77,17 +77,15 @@ class EatingManager:
     def _is_food_exists(self, _food: str, gid: Optional[str]) -> FoodLoc:
         '''
             检查菜品是否存在于某个群组
-            优先检测是否在群组
+            优先检测是否在群组，优先移除
         ''' 
         if isinstance(gid, str):
             if gid in self._eating["group_food"]:
-                for food in self._eating["group_food"][gid]:
-                    if food == _food:
-                        return FoodLoc.IN_GROUP
+                if _food in self._eating["group_food"][gid]:
+                    return FoodLoc.IN_GROUP
         
-        for food in self._eating["basic_food"]:
-            if food == _food:
-                return FoodLoc.IN_BASIC
+        if _food in self._eating["basic_food"]:
+            return FoodLoc.IN_BASIC
         
         return FoodLoc.NOT_EXISTS
 
@@ -223,8 +221,8 @@ class EatingManager:
         for meal in Meals:
             if input_cn in meal.value:
                 return meal
-        else:
-            return None
+        
+        return None
 
     def add_greeting(self, meal: Meals, greeting: str) -> MessageSegment:
         '''
