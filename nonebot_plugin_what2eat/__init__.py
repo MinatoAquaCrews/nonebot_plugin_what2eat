@@ -1,16 +1,15 @@
 from typing import Coroutine, Any
-from nonebot import on_command, on_regex
+from nonebot import on_command, on_regex, logger
 from nonebot.typing import T_State
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP, GROUP_ADMIN, GROUP_OWNER, Message, MessageEvent, GroupMessageEvent
 from nonebot.params import Depends, Arg, ArgStr, CommandArg, RegexMatched
 from nonebot.matcher import Matcher
-from nonebot import logger
 from nonebot_plugin_apscheduler import scheduler
 from .utils import Meals
 from .data_source import eating_manager
 
-__what2eat_version__ = "v0.3.3a1"
+__what2eat_version__ = "v0.3.3rc1"
 __what2eat_notes__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot恰什么

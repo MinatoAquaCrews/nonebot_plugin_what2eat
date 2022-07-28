@@ -1,9 +1,9 @@
 from pathlib import Path
 from pydantic import BaseModel, Extra
 from typing import List, Dict, Set, Union, Any
-import httpx
 from nonebot import get_driver, logger
 from .utils import save_json, Meals
+import httpx
 try:
     import ujson as json
 except ModuleNotFoundError:
@@ -74,13 +74,8 @@ async def download_file(_file: Path, _name: str) -> None:
         
 @driver.on_startup
 async def what2eat_check() -> None:
-    '''
-        Check the path, gnerate the groups id saved in eating.json
-        If needed, download the preset menu and greetings
-    '''
     if not what2eat_config.what2eat_path.exists():
         what2eat_config.what2eat_path.mkdir(parents=True, exist_ok=True)
-    
     '''
         If eating.json doesn't exist or eating.json exists but f.get["basic_food"] doesn't exist and USE_PRESET_MENU is True, download
         If USE_PRESET_MENU is False, break
@@ -90,7 +85,7 @@ async def what2eat_check() -> None:
         if not eating_json.exists():
             await download_file(eating_json, "eating.json")
         else:
-            # Exists then check the keys
+            # check the keys
             with eating_json.open("r", encoding="utf-8") as f:
                 _f: Dict[str, Union[List[str], Dict[str, Union[Dict[str, List[int]], List[str]]]]] = json.load(f)
                 if not _f.get("basic_food", False):
@@ -103,7 +98,6 @@ async def what2eat_check() -> None:
                     _f.update({"count": {}})
                 
             save_json(eating_json, _f)
-    
     '''
         If greetings.json doesn't exist or greetings.json exists but ... ALL doesn't exist and USE_PRESET_greetings is True, download
         If USE_PRESET_greetings is False, break
