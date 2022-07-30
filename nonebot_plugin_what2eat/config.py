@@ -27,7 +27,7 @@ class DownloadError(Exception):
     def __str__(self):
         return self.msg
     
-async def download_url(url: str) -> Union[Any, None]:
+async def download_url(url: str) -> Any:
     async with httpx.AsyncClient() as client:
         for i in range(3):
             try:
@@ -38,39 +38,16 @@ async def download_url(url: str) -> Union[Any, None]:
             except Exception:
                 logger.warning(f"Error occured when downloading {url}, retry: {i+1}/3")
     
-    logger.warning(f"Abort downloading")
-    return None
-        
-def write_init_keys(_file: Path, _name: str) -> None:
-    '''
-        Write ALL the initial keys
-    '''
-    _data = dict()
-    if _name == "eating.json":
-        _data["basic_food"] = []
-        _data["group_food"] = {}
-        _data["count"] = {}
-        save_json(_file, _data)
-    else:
-        for meal in Meals:
-            if meal not in _data:
-                _data[meal.value[0]] = []
-        
-        _data["groups_id"] = {}
-        save_json(_file, _data)
+    raise DownloadError(f"Reseource {url} download failed! Please check!")
                
 async def download_file(_file: Path, _name: str) -> None:
     _url = "https://raw.fastgit.org/MinatoAquaCrews/nonebot_plugin_what2eat/beta/nonebot_plugin_what2eat/resource/"
     url = _url + _name
     
     resp = await download_url(url)
-    if resp is None:
-        # Write initial keys in file when download failed
-        write_init_keys(_file, _name)
-        logger.info(f"Write inital keys in file {_name}")
-    else:
-        save_json(_file, resp)
-        logger.info(f"Get file {_name} from repo")
+    save_json(_file, resp)
+    
+    logger.info(f"Get file {_name} from repo")
         
 @driver.on_startup
 async def what2eat_check() -> None:
@@ -105,7 +82,7 @@ async def what2eat_check() -> None:
     greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
     if what2eat_config.use_preset_greetings:
         if not greetings_json.exists():
-            await download_file(greetings_json, "greetings.json")    
+            await download_file(greetings_json, "greetings.json")
         else:
             # Exists then check the keys
             with greetings_json.open("r", encoding="utf-8") as f:
@@ -118,6 +95,10 @@ async def what2eat_check() -> None:
                     _f["groups_id"] = {}
             
             save_json(greetings_json, _f)
+    
+    drinking_json: Path = what2eat_config.what2eat_path / "drinks.json"
+    if not drinking_json.exists():
+        await download_file(drinking_json, "drinks.json")
     
     # Save groups id in greetings.json if len > 0
     if len(what2eat_config.greeting_groups_id) > 0:

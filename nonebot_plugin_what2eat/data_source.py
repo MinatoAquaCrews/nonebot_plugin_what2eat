@@ -3,7 +3,7 @@ from nonebot.adapters.onebot.v11 import ActionFailed
 from nonebot import get_bot, logger
 import random
 from pathlib import Path
-from typing import Optional, Union, List, Dict
+from typing import Optional, Union, List, Dict, Tuple
 from .utils import save_json, load_json, Meals, FoodLoc
 from .config import what2eat_config
 
@@ -14,8 +14,9 @@ class EatingManager:
         
         self._eating_json: Path = what2eat_config.what2eat_path / "eating.json"
         self._greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
+        self._drinks_json: Path = what2eat_config.what2eat_path / "drinks.json"
     
-    def _init_data(self, gid: str, uid: Optional[str]) -> None:
+    def _init_data(self, gid: str, uid: Optional[str] = None) -> None:
         '''
             初始化用户信息
         ''' 
@@ -73,8 +74,41 @@ class EatingManager:
             save_json(self._eating_json, self._eating)
 
             return msg
+        
+    def get2drink(self, event: MessageEvent) -> MessageSegment:
+        '''
+            今天喝什么
+        '''
+        uid = str(event.user_id)
+        gid = str(event.group_id)
+        
+        self._eating = load_json(self._eating_json)
+        self._init_data(gid, uid)
+            
+        if isinstance(event, PrivateMessageEvent):
+            _branch, _drink = self.pick_one_drink()
+            return MessageSegment.text(f"不如来杯 {_branch} 的 {_drink} 吧！")
 
-    def _is_food_exists(self, _food: str, gid: Optional[str]) -> FoodLoc:
+        # Check whether is full of stomach
+        if self._eating["count"][gid][uid] >= what2eat_config.eating_limit:
+            save_json(self._eating_json, self._eating)
+            return random.choice(
+                [
+                    "你今天已经吃得够多了！",
+                    "吃这么多的吗？",
+                    "害搁这吃呢？不工作的吗？",
+                    "再吃肚子就要爆炸咯~",
+                    "你是米虫吗？今天碳水要爆炸啦！"
+                ]
+            )
+        else:
+            _branch, _drink = self.pick_one_drink()
+            self._eating["count"][gid][uid] += 1
+            save_json(self._eating_json, self._eating)
+
+            return MessageSegment.text(f"不如来杯 {_branch} 的 {_drink} 吧！")
+
+    def _is_food_exists(self, _food: str, gid: Optional[str] = None) -> FoodLoc:
         '''
             检查菜品是否存在于某个群组
             优先检测是否在群组，优先移除
@@ -168,6 +202,13 @@ class EatingManager:
                 self._eating["count"][gid][uid] = 0
         
         save_json(self._eating_json, self._eating)
+        
+    def pick_one_drink(self) -> Tuple[str, str]:
+        self._drinks: Dict[str, List[str]] = load_json(self._drinks_json)
+        _branch = random.choice(list(self._drinks))
+        _drink = random.choice(list(self._drinks[_branch]))
+        
+        return _branch, _drink
 
     # ------------------------- Menu -------------------------
     def show_group_menu(self, gid: str) -> MessageSegment:

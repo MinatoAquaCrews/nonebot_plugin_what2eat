@@ -9,10 +9,11 @@ from nonebot_plugin_apscheduler import scheduler
 from .utils import Meals
 from .data_source import eating_manager
 
-__what2eat_version__ = "v0.3.3rc1"
+__what2eat_version__ = "v0.3.3a2"
 __what2eat_notes__ = f'''
 今天吃什么？ {__what2eat_version__}
-[xx吃xx]    问bot恰什么
+[xx吃xx]    问bot吃什么
+[xx喝xx]    问bot喝什么
 [添加 xx]   添加菜品至群菜单
 [移除 xx]   从菜单移除菜品
 [加菜 xx]   添加菜品至基础菜单
@@ -22,16 +23,17 @@ __what2eat_notes__ = f'''
 [添加/删除问候 时段 问候语] 添加/删除吃饭小助手问候语'''.strip()
 
 what2eat = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)吃(什么|啥|点啥)(帮助)?$", priority=15)
+what2drink = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)喝(什么|啥|点啥)(帮助)?$", priority=15)
 group_add = on_command("添加", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
 group_remove = on_command("移除", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
 basic_add = on_command("加菜", permission=SUPERUSER, priority=15, block=True)
 show_group_menu = on_command("菜单", aliases={"群菜单", "查看菜单"}, permission=GROUP, priority=15, block=True)
 show_basic_menu = on_command("基础菜单", permission=GROUP, priority=15, block=True)
 
-greeting_on = on_command("开启小助手", aliases={"启用小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
-greeting_off = on_command("关闭小助手", aliases={"禁用小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
-add_greeting = on_command("添加问候", aliases={"添加问候语"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
-remove_greeting = on_command("删除问候", aliases={"删除问候语", "移除问候", "移除问候语"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
+greeting_on = on_command("开启小助手", aliases={"启用小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=12, block=True)
+greeting_off = on_command("关闭小助手", aliases={"禁用小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=12, block=True)
+add_greeting = on_command("添加问候", aliases={"添加问候语"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=12, block=True)
+remove_greeting = on_command("删除问候", aliases={"删除问候语", "移除问候", "移除问候语"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=12, block=True)
 
 @what2eat.handle()
 async def _(event: MessageEvent, args: str = RegexMatched()):
@@ -40,6 +42,14 @@ async def _(event: MessageEvent, args: str = RegexMatched()):
     
     msg = eating_manager.get2eat(event)
     await what2eat.finish(msg)
+    
+@what2drink.handle()
+async def _(event: MessageEvent, args: str = RegexMatched()):
+    if args[-2:] == "帮助":
+        await what2drink.finish(__what2eat_notes__)
+    
+    msg = eating_manager.get2drink(event)
+    await what2drink.finish(msg)
 
 @group_add.handle()
 async def _(event: GroupMessageEvent, args: Message = CommandArg()):
