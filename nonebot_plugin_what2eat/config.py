@@ -27,7 +27,7 @@ class DownloadError(Exception):
     def __str__(self):
         return self.msg
     
-async def download_url(url: str) -> Any:
+async def download_url(url: str) -> Union[Any, None]:
     async with httpx.AsyncClient() as client:
         for i in range(3):
             try:
@@ -38,21 +38,25 @@ async def download_url(url: str) -> Any:
             except Exception:
                 logger.warning(f"Error occured when downloading {url}, retry: {i+1}/3")
     
-    raise DownloadError(f"Reseource {url} download failed! Please check!")
+    logger.warning(f"Abort downloading")
+    return None
                
 async def download_file(_file: Path, _name: str) -> None:
     _url = "https://raw.fastgit.org/MinatoAquaCrews/nonebot_plugin_what2eat/beta/nonebot_plugin_what2eat/resource/"
     url = _url + _name
     
     resp = await download_url(url)
+    if resp is None and not _file.exists():
+        raise DownloadError(f"Reseource {_name} download failed! Please check!")
+        
     save_json(_file, resp)
-    
-    logger.info(f"Get file {_name} from repo")
+    logger.info(f"Get the latest {_name} from repo")
         
 @driver.on_startup
 async def what2eat_check() -> None:
     if not what2eat_config.what2eat_path.exists():
         what2eat_config.what2eat_path.mkdir(parents=True, exist_ok=True)
+    
     '''
         If eating.json doesn't exist or eating.json exists but f.get["basic_food"] doesn't exist and USE_PRESET_MENU is True, download
         If USE_PRESET_MENU is False, break
@@ -96,9 +100,12 @@ async def what2eat_check() -> None:
             
             save_json(greetings_json, _f)
     
+    '''
+        Get the latest drinks.json from repo
+        If failed, raise exception
+    '''
     drinking_json: Path = what2eat_config.what2eat_path / "drinks.json"
-    if not drinking_json.exists():
-        await download_file(drinking_json, "drinks.json")
+    await download_file(drinking_json, "drinks.json")
     
     # Save groups id in greetings.json if len > 0
     if len(what2eat_config.greeting_groups_id) > 0:
