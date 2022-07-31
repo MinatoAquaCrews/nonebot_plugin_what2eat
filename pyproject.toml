@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "nonebot_plugin_what2eat"
-version = "0.3.3rc2"
-description = "Ask bot for what to eat today!"
+version = "0.3.3"
+description = "Ask bot for what to eat or what to drink!"
 authors = ["KafCoppelia <k740677208@gmail.com>"]
 license = "MIT"
 readme = "README.md"

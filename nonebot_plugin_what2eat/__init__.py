@@ -1,15 +1,16 @@
-from typing import Coroutine, Any
+from typing import Coroutine, Any, List, Dict, Union
 from nonebot import on_command, on_regex, logger
 from nonebot.typing import T_State
 from nonebot.permission import SUPERUSER
-from nonebot.adapters.onebot.v11 import GROUP, GROUP_ADMIN, GROUP_OWNER, Message, MessageEvent, GroupMessageEvent
+from nonebot.adapters.onebot.v11 import Bot, GROUP, GROUP_ADMIN, GROUP_OWNER, Message, MessageEvent, MessageSegment, GroupMessageEvent
 from nonebot.params import Depends, Arg, ArgStr, CommandArg, RegexMatched
 from nonebot.matcher import Matcher
 from nonebot_plugin_apscheduler import scheduler
 from .utils import Meals
+from .config import what2eat_config
 from .data_source import eating_manager
 
-__what2eat_version__ = "v0.3.3rc2"
+__what2eat_version__ = "v0.3.3"
 __what2eat_notes__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot吃什么
@@ -17,8 +18,8 @@ __what2eat_notes__ = f'''
 [添加 xx]   添加菜品至群菜单
 [移除 xx]   从菜单移除菜品
 [加菜 xx]   添加菜品至基础菜单
-[菜单]       查看群菜单
-[基础菜单]  查看基础菜单
+[菜单]        查看群菜单
+[基础菜单] 查看基础菜单
 [开启/关闭小助手] 开启/关闭吃饭小助手
 [添加/删除问候 时段 问候语] 添加/删除吃饭小助手问候语'''.strip()
 
@@ -94,15 +95,23 @@ async def _(event: GroupMessageEvent, args: Message = CommandArg()):
     await group_remove.finish(msg)
 
 @show_group_menu.handle()
-async def _(event: GroupMessageEvent):
+async def _(bot: Bot, event: GroupMessageEvent):
     gid = str(event.group_id)
-    msg = eating_manager.show_group_menu(gid)
-    await show_group_menu.finish(msg)
+    line, msg = eating_manager.show_group_menu(gid)
+    if line > 20:
+        chain = await chain_reply(bot, [], msg)
+        await bot.call_api("send_group_forward_msg", group_id=event.group_id, messages=chain)
+    else:
+        await show_group_menu.finish(msg)
 
 @show_basic_menu.handle()
-async def _(matcher: Matcher):
-    msg = eating_manager.show_basic_menu()
-    await matcher.finish(msg)
+async def _(bot: Bot, event: GroupMessageEvent):
+    line, msg = eating_manager.show_basic_menu()
+    if line > 20:
+        chain = await chain_reply(bot, [], msg)
+        await bot.call_api("send_group_forward_msg", group_id=event.group_id, messages=chain)
+    else:
+        await show_basic_menu.finish(msg)
 
 # ------------------------- Greetings -------------------------
 @greeting_on.handle()
@@ -254,3 +263,15 @@ async def time_for_dinner():
 async def time_for_midnight():
     await eating_manager.do_greeting(Meals.MIDNIGHT)
     logger.info(f"已群发夜宵提醒")
+
+async def chain_reply(bot: Bot, chain: List[Dict[str, Union[str, Dict[str, Union[str, MessageSegment]]]]], msg: MessageSegment) -> List[Dict[str, Union[str, Dict[str, Union[str, MessageSegment]]]]]:
+    data = {
+        "type": "node",
+        "data": {
+            "name": f"{list(what2eat_config.nickname)[0]}",
+            "uin": f"{bot.self_id}",
+            "content": msg
+        },
+    }
+    chain.append(data)
+    return chain

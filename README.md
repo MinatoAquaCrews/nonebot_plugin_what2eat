@@ -20,7 +20,7 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
     <img src="https://img.shields.io/badge/nonebot2-2.0.0b3+-green">
   </a>
   
-  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.3rc2">
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.3">
     <img src="https://img.shields.io/github/v/release/MinatoAquaCrews/nonebot_plugin_what2eat?color=orange">
   </a>
 
@@ -32,11 +32,11 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
 
 ## 版本
 
-v0.3.3rc2 今天喝什么！
+v0.3.3 今天喝什么！
 
 ⚠ 适配nonebot2-2.0.0b3+
 
-[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.3rc2)
+[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.3)
 
 ## 安装
 
@@ -63,6 +63,7 @@ v0.3.3rc2 今天喝什么！
     EATING_LIMIT=5									# 每个时段吃什么的次数上限，默认5次；每日6点、11点、17点、22点自动刷新
     GREETING_GROUPS_ID=["123456789", "987654321"]	# 默认开启小助手群组，或{"123456789", "987654321"}
     SUPERUSERS={"12345678"}                       	# 同nonebot超管配置
+    NICKNAME={"Bot"}                                # 同nonebot机器人昵称配置
     ```
 
 3. 群管理可自行添加或移除群特色菜单（位于`eating.json`下`[group_food][group_id]`）；超管可添加或移除基础菜单（`[basic_food]`）；
@@ -77,18 +78,16 @@ v0.3.3rc2 今天喝什么！
 
     ⚠ 群吃饭小助手启用配置存于`greetings.json`的`groups_id`字段
 
-6. 初次使用该插件时，若不存在`eating.json`与`greetings.json`文件，设置`USE_PRESET_MENU`及`USE_PRESET_GREETINGS`可从仓库中尝试下载；若下载失败则会报错。会尝试从仓库中下载`drinks.json`。
+6. 初次使用该插件时，若不存在`eating.json`与`greetings.json`文件，设置`USE_PRESET_MENU`及`USE_PRESET_GREETINGS`可从仓库中尝试下载；会尝试从仓库中下载`drinks.json`。若资源下载失败且本地不存在，则抛出错误。
 
     ```python
     USE_PRESET_MENU=false
     USE_PRESET_GREETINGS=false
     ```
 
-    ⚠ 若存在`eating.json`与`greetings.json`，不会从仓库中下载，仅检查是否缺少必要的键值，并补写初始键值
-
     ⚠ 从仓库下载会**覆写**原有配置！建议老用户按需开启从仓库下载设置
 
-    ⚠ `v0.3.3`已弃用兼容，请注意
+    ⚠ `v0.3.3`已弃用`v0.2.x`版本旧资源的兼容，请注意
 
 ## 命令
 
@@ -96,19 +95,19 @@ v0.3.3rc2 今天喝什么！
 
 2. 🔥 **新增** 喝什么： 今天喝什么、中午喝啥、今晚喝啥、中午喝什么、晚上喝啥、晚上喝什么、夜宵喝啥……
 
-    ⚠ 喝什么与吃什么共用`EATING_LIMIT`次数
+    ⚠ 与吃什么共用`EATING_LIMIT`次数
 
 3. [管理员或超管] 添加或移除群菜名：[添加/移除 菜名]；
 
 4. 查看群菜单：[菜单/群菜单/查看菜单]；
 
-6. [超管] 添加至基础菜单：[加菜 菜名]；
+5. [超管] 添加至基础菜单：[加菜 菜名]；
 
-7. 查看基础菜单：[基础菜单]；
+6. 查看基础菜单：[基础菜单]；
 
-8. [管理员或超管] 开启/关闭吃饭小助手：[开启/启用/关闭/禁用小助手]；
+7. [管理员或超管] 开启/关闭吃饭小助手：[开启/启用/关闭/禁用小助手]；
 
-9. [管理员或超管] 添加/删除吃饭小助手问候语：[添加/删除/移除问候 时段 问候语]；
+8. [管理员或超管] 添加/删除吃饭小助手问候语：[添加/删除/移除问候 时段 问候语]；
 
     ⚠ 添加/移除问候操作可一步步进行，或一次性输入两或三个命令；可中途取消操作
 
@@ -120,7 +119,9 @@ v0.3.3rc2 今天喝什么！
 
     A：建议肯德基
 
-    （吃什么*5）
+    Q：今晚喝啥
+
+    A：不如来杯 茶颜悦色 的 幽兰拿铁 吧！
 
     Q：今晚吃什么
 

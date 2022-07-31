@@ -95,11 +95,11 @@ class EatingManager:
             save_json(self._eating_json, self._eating)
             return MessageSegment.text(random.choice(
                     [
-                        "你今天已经吃得够多了！",
-                        "吃这么多的吗？",
-                        "害搁这吃呢？不工作的吗？",
-                        "再吃肚子就要爆炸咯~",
-                        "你是米虫吗？今天碳水要爆炸啦！"
+                        "你今天已经喝得够多了！",
+                        "喝这么多的吗？",
+                        "害搁这喝呢？不工作的吗？",
+                        "再喝肚子就要爆炸咯~",
+                        "你是水桶吗？今天糖分要超标啦！"
                     ]
                 )
             )
@@ -111,7 +111,7 @@ class EatingManager:
             return MessageSegment.text(random.choice(
                     [
                         f"不如来杯 {_branch} 的 {_drink} 吧！",
-                        f"去 {_branch}整杯 {_drink} 吧！",
+                        f"去 {_branch} 整杯 {_drink} 吧！",
                         f"{_branch} 的 {_drink} 如何？"
                     ]
                 )
@@ -220,7 +220,7 @@ class EatingManager:
         return _branch, _drink
 
     # ------------------------- Menu -------------------------
-    def show_group_menu(self, gid: str) -> MessageSegment:
+    def show_group_menu(self, gid: str) -> Tuple[int, MessageSegment]:
         msg: str = ""
         self._eating = load_json(self._eating_json)
         self._init_data(gid)
@@ -231,11 +231,11 @@ class EatingManager:
             for food in self._eating["group_food"][gid]:
                 msg += f"\n{food}"
             
-            return MessageSegment.text(msg)
+            return len(self._eating["group_food"][gid]), MessageSegment.text(msg)
         
-        return MessageSegment.text("还没有群特色菜单呢，请[添加 菜名]🤤")
+        return 0, MessageSegment.text("还没有群特色菜单呢，请[添加 菜名]🤤")
 
-    def show_basic_menu(self) -> MessageSegment:
+    def show_basic_menu(self) -> Tuple[int, MessageSegment]:
         msg: str = ""
         self._eating = load_json(self._eating_json)
 
@@ -244,9 +244,9 @@ class EatingManager:
             for food in self._eating["basic_food"]:
                 msg += f"\n{food}"
             
-            return MessageSegment.text(msg)
+            return len(self._eating["basic_food"]), MessageSegment.text(msg)
         
-        return MessageSegment.text("还没有基础菜单呢，请[添加 菜名]🤤")
+        return 0, MessageSegment.text("还没有基础菜单呢，请[添加 菜名]🤤")
 
     # ------------------------- Greetings -------------------------
     def update_groups_on(self, gid: str, new_state: bool) -> None:
@@ -327,7 +327,7 @@ class EatingManager:
             for gid in self._greetings["groups_id"]:
                 if self._greetings["groups_id"].get(gid, False):
                     try:
-                        await bot.send_group_msg(group_id=int(gid), message=msg)
+                        await bot.call_api("send_group_msg", group_id=int(gid), message=msg)
                     except ActionFailed as e:
                         logger.warning(f"发送群 {gid} 失败：{e}")
     
