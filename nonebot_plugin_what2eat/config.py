@@ -16,6 +16,7 @@ class PluginConfig(BaseModel, extra=Extra.ignore):
     eating_limit: int = 5
     greeting_groups_id: Set[str] = set()
     superusers: Set[str] = set()
+    nickname: Set[str] = {"Bot"}
     
 driver = get_driver()
 what2eat_config: PluginConfig = PluginConfig.parse_obj(driver.config.dict())
