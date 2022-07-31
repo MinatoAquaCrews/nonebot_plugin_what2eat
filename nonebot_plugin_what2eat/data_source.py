@@ -49,14 +49,15 @@ class EatingManager:
         # Check whether is full of stomach
         if self._eating["count"][gid][uid] >= what2eat_config.eating_limit:
             save_json(self._eating_json, self._eating)
-            return random.choice(
-                [
-                    "你今天已经吃得够多了！",
-                    "吃这么多的吗？",
-                    "害搁这吃呢？不工作的吗？",
-                    "再吃肚子就要爆炸咯~",
-                    "你是米虫吗？今天碳水要爆炸啦！"
-                ]
+            return MessageSegment.text(random.choice(
+                    [
+                        "你今天已经吃得够多了！",
+                        "吃这么多的吗？",
+                        "害搁这吃呢？不工作的吗？",
+                        "再吃肚子就要爆炸咯~",
+                        "你是米虫吗？今天碳水要爆炸啦！"
+                    ]
+                )
             )
         else:
             # basic_food and group_food both are EMPTY
@@ -92,21 +93,29 @@ class EatingManager:
         # Check whether is full of stomach
         if self._eating["count"][gid][uid] >= what2eat_config.eating_limit:
             save_json(self._eating_json, self._eating)
-            return random.choice(
-                [
-                    "你今天已经吃得够多了！",
-                    "吃这么多的吗？",
-                    "害搁这吃呢？不工作的吗？",
-                    "再吃肚子就要爆炸咯~",
-                    "你是米虫吗？今天碳水要爆炸啦！"
-                ]
+            return MessageSegment.text(random.choice(
+                    [
+                        "你今天已经吃得够多了！",
+                        "吃这么多的吗？",
+                        "害搁这吃呢？不工作的吗？",
+                        "再吃肚子就要爆炸咯~",
+                        "你是米虫吗？今天碳水要爆炸啦！"
+                    ]
+                )
             )
         else:
             _branch, _drink = self.pick_one_drink()
             self._eating["count"][gid][uid] += 1
             save_json(self._eating_json, self._eating)
 
-            return MessageSegment.text(f"不如来杯 {_branch} 的 {_drink} 吧！")
+            return MessageSegment.text(random.choice(
+                    [
+                        f"不如来杯 {_branch} 的 {_drink} 吧！",
+                        f"去 {_branch}整杯 {_drink} 吧！",
+                        f"{_branch} 的 {_drink} 如何？"
+                    ]
+                )
+            )
 
     def _is_food_exists(self, _food: str, gid: Optional[str] = None) -> FoodLoc:
         '''
@@ -152,7 +161,7 @@ class EatingManager:
         '''
         self._eating = load_json(self._eating_json)
         msg: str = ""
-        status: FoodLoc = self._is_food_exists(new_food, None)
+        status: FoodLoc = self._is_food_exists(new_food)
         
         if status == FoodLoc.IN_BASIC:
             msg = f"{new_food} 已在基础菜单中~"
@@ -206,7 +215,7 @@ class EatingManager:
     def pick_one_drink(self) -> Tuple[str, str]:
         self._drinks: Dict[str, List[str]] = load_json(self._drinks_json)
         _branch = random.choice(list(self._drinks))
-        _drink = random.choice(list(self._drinks[_branch]))
+        _drink = random.choice(self._drinks[_branch])
         
         return _branch, _drink
 
@@ -214,7 +223,7 @@ class EatingManager:
     def show_group_menu(self, gid: str) -> MessageSegment:
         msg: str = ""
         self._eating = load_json(self._eating_json)
-        self._init_data(gid, None)
+        self._init_data(gid)
         save_json(self._eating_json, self._eating)
             
         if len(self._eating["group_food"][gid]) > 0:

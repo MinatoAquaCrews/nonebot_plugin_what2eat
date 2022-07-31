@@ -9,7 +9,7 @@ from nonebot_plugin_apscheduler import scheduler
 from .utils import Meals
 from .data_source import eating_manager
 
-__what2eat_version__ = "v0.3.3a2"
+__what2eat_version__ = "v0.3.3rc2"
 __what2eat_notes__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot吃什么

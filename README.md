@@ -20,7 +20,7 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
     <img src="https://img.shields.io/badge/nonebot2-2.0.0b3+-green">
   </a>
   
-  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.3a2">
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.3rc2">
     <img src="https://img.shields.io/github/v/release/MinatoAquaCrews/nonebot_plugin_what2eat?color=orange">
   </a>
 
@@ -32,11 +32,11 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
 
 ## 版本
 
-v0.3.3a2 今天喝什么！
+v0.3.3rc2 今天喝什么！
 
 ⚠ 适配nonebot2-2.0.0b3+
 
-[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.3a2)
+[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.3rc2)
 
 ## 安装
 
@@ -50,17 +50,19 @@ v0.3.3a2 今天喝什么！
 
 ## 功能
 
-1. 选择恐惧症？让Bot建议你今天吃/喝什么！
+1. 🔥 **新增** 选择恐惧症？让Bot建议你今天吃/喝什么！
+
+    ⚠ 新增一点点、茶颜悦色、蜜雪冰城、茶百道、瑞幸咖啡菜单！
 
 2. ⚠ 插件配置：
    
     ``` python
-    WHAT2EAT_PATH="your-path-to-resource"         # 资源路径
-    USE_PRESET_MENU=false                         # 是否从repo中下载预置基础菜单，默认为False
-    USE_PRESET_GREETINGS=false                    # 是否从repo中下载预置问候语，默认为False
-    EATING_LIMIT=5                                # 每个时段吃什么的次数上限，默认5次；每日6点、11点、17点、22点自动刷新
-    GREETING_GROUPS_ID=["123456789", "987654321"] # 默认开启小助手群组，或{"123456789", "987654321"}
-    SUPERUSERS={"12345678"}                       # 同nonebot超管配置
+    WHAT2EAT_PATH="your-path-to-resource"			# 资源路径
+    USE_PRESET_MENU=false							# 是否从repo中下载预置基础菜单，默认为False
+    USE_PRESET_GREETINGS=false                    	# 是否从repo中下载预置问候语，默认为False
+    EATING_LIMIT=5									# 每个时段吃什么的次数上限，默认5次；每日6点、11点、17点、22点自动刷新
+    GREETING_GROUPS_ID=["123456789", "987654321"]	# 默认开启小助手群组，或{"123456789", "987654321"}
+    SUPERUSERS={"12345678"}                       	# 同nonebot超管配置
     ```
 
 3. 群管理可自行添加或移除群特色菜单（位于`eating.json`下`[group_food][group_id]`）；超管可添加或移除基础菜单（`[basic_food]`）；
@@ -70,7 +72,7 @@ v0.3.3a2 今天喝什么！
 5. 吃饭小助手：每天7、12、15、18、22点群发问候语提醒群友吃饭/摸鱼/下班，`GREETING_GROUPS_ID`设置常开的群号列表（或集合），每次启动插件时将置`True`，形如：
 
     ```python
-    GREETING_GROUPS_ID=["123456789", "987654321"] # 名字长防止与其他插件配置名相同
+    GREETING_GROUPS_ID=["123456789", "987654321"]   # 名字长防止与其他插件配置名相同
     ```
 
     ⚠ 群吃饭小助手启用配置存于`greetings.json`的`groups_id`字段
@@ -86,7 +88,7 @@ v0.3.3a2 今天喝什么！
 
     ⚠ 从仓库下载会**覆写**原有配置！建议老用户按需开启从仓库下载设置
 
-    ⚠ `v0.3.2`会兼容`v0.2.x`，在插件启动时启用自动兼容：检测`v0.2.x`的配置文件，将其自动改为当前版本的配置文件及键值。但当原`v0.2.x`的配置文件不存在时则忽略。`v0.3.3`已弃用兼容，请注意
+    ⚠ `v0.3.3`已弃用兼容，请注意
 
 ## 命令
 
@@ -94,7 +96,7 @@ v0.3.3a2 今天喝什么！
 
 2. 🔥 **新增** 喝什么： 今天喝什么、中午喝啥、今晚喝啥、中午喝什么、晚上喝啥、晚上喝什么、夜宵喝啥……
 
-	⚠ 喝什么与吃什么共用`EATING_LIMIT`次数
+    ⚠ 喝什么与吃什么共用`EATING_LIMIT`次数
 
 3. [管理员或超管] 添加或移除群菜名：[添加/移除 菜名]；
 
