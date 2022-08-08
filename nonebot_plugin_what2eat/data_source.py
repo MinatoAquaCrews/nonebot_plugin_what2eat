@@ -1,10 +1,10 @@
-from nonebot.adapters.onebot.v11 import MessageEvent, GroupMessageEvent, PrivateMessageEvent, MessageSegment
+from nonebot.adapters.onebot.v11 import Message, MessageEvent, GroupMessageEvent, PrivateMessageEvent, MessageSegment
 from nonebot.adapters.onebot.v11 import ActionFailed
 from nonebot import get_bot, logger
 import random
 from pathlib import Path
 from typing import Optional, Union, List, Dict, Tuple
-from .utils import save_json, load_json, Meals, FoodLoc
+from .utils import *
 from .config import what2eat_config
 
 class EatingManager:
@@ -15,6 +15,7 @@ class EatingManager:
         self._eating_json: Path = what2eat_config.what2eat_path / "eating.json"
         self._greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
         self._drinks_json: Path = what2eat_config.what2eat_path / "drinks.json"
+        self._img_dir: Path = what2eat_config.what2eat_path / "img"
     
     def _init_data(self, gid: str, uid: Optional[str] = None) -> None:
         '''
@@ -29,36 +30,28 @@ class EatingManager:
             if uid not in self._eating["count"][gid]:
                 self._eating["count"][gid][uid] = 0
 
-    def get2eat(self, event: MessageEvent) -> MessageSegment:
+    def get2eat(self, event: MessageEvent) -> Tuple[Message, MessageSegment]:
         '''
             今天吃什么
         '''
+        # Deal with private message event FIRST
+        if isinstance(event, PrivateMessageEvent):
+            if len(self._eating["basic_food"]) > 0:
+                return MessageSegment.text("建议") + Message(random.choice(self._eating["basic_food"]))
+            else:
+                return MessageSegment.text("还没有菜单呢，就先饿着肚子吧，请[添加 菜名]🤤")
+            
         uid = str(event.user_id)
         gid = str(event.group_id)
         food_list: List[str] = []
         
         self._eating = load_json(self._eating_json)
         self._init_data(gid, uid)
-            
-        if isinstance(event, PrivateMessageEvent):
-            if len(self._eating["basic_food"]) > 0:
-                return MessageSegment.text("建议") + MessageSegment.text(random.choice(self._eating["basic_food"]))
-            else:
-                return MessageSegment.text("还没有菜单呢，就先饿着肚子吧，请[添加 菜名]🤤")
 
         # Check whether is full of stomach
         if self._eating["count"][gid][uid] >= what2eat_config.eating_limit:
             save_json(self._eating_json, self._eating)
-            return MessageSegment.text(random.choice(
-                    [
-                        "你今天已经吃得够多了！",
-                        "吃这么多的吗？",
-                        "害搁这吃呢？不工作的吗？",
-                        "再吃肚子就要爆炸咯~",
-                        "你是米虫吗？今天碳水要爆炸啦！"
-                    ]
-                )
-            )
+            return MessageSegment.text(random.choice(EatingEnough_List))
         else:
             # basic_food and group_food both are EMPTY
             if len(self._eating["basic_food"]) == 0 and len(self._eating["group_food"][gid]) == 0:
@@ -70,7 +63,7 @@ class EatingManager:
             if len(self._eating["group_food"][gid]) > 0:
                 food_list = list(set(food_list).union(set(self._eating["group_food"][gid])))
 
-            msg = MessageSegment.text("建议") + MessageSegment.text(random.choice(food_list))
+            msg = MessageSegment.text("建议") + Message(random.choice(food_list))
             self._eating["count"][gid][uid] += 1
             save_json(self._eating_json, self._eating)
 
@@ -80,29 +73,29 @@ class EatingManager:
         '''
             今天喝什么
         '''
+        # Deal with private message event first
+        if isinstance(event, PrivateMessageEvent):
+            _branch, _drink = self.pick_one_drink()
+            return MessageSegment.text(random.choice(
+                    [
+                        f"不如来杯 {_branch} 的 {_drink} 吧！",
+                        f"去 {_branch} 整杯 {_drink} 吧！",
+                        f"{_branch} 的 {_drink} 如何？",
+                        f"{_branch} 的 {_drink}，好喝绝绝子！"
+                    ]
+                )
+            )
+        
         uid = str(event.user_id)
         gid = str(event.group_id)
         
         self._eating = load_json(self._eating_json)
         self._init_data(gid, uid)
-            
-        if isinstance(event, PrivateMessageEvent):
-            _branch, _drink = self.pick_one_drink()
-            return MessageSegment.text(f"不如来杯 {_branch} 的 {_drink} 吧！")
 
         # Check whether is full of stomach
         if self._eating["count"][gid][uid] >= what2eat_config.eating_limit:
             save_json(self._eating_json, self._eating)
-            return MessageSegment.text(random.choice(
-                    [
-                        "你今天已经喝得够多了！",
-                        "喝这么多的吗？",
-                        "害搁这喝呢？不工作的吗？",
-                        "再喝肚子就要爆炸咯~",
-                        "你是水桶吗？今天糖分要超标啦！"
-                    ]
-                )
-            )
+            return MessageSegment.text(random.choice(DrinkingEnough_List))
         else:
             _branch, _drink = self.pick_one_drink()
             self._eating["count"][gid][uid] += 1
@@ -112,29 +105,33 @@ class EatingManager:
                     [
                         f"不如来杯 {_branch} 的 {_drink} 吧！",
                         f"去 {_branch} 整杯 {_drink} 吧！",
-                        f"{_branch} 的 {_drink} 如何？"
+                        f"{_branch} 的 {_drink} 如何？",
+                        f"{_branch} 的 {_drink}，好喝绝绝子！"
                     ]
                 )
             )
 
-    def _is_food_exists(self, _food: str, gid: Optional[str] = None) -> FoodLoc:
+    def _is_food_exists(self, _food: str, gid: Optional[str] = None) -> Tuple[FoodLoc, str]:
         '''
-            检查菜品是否存在于某个群组
-            优先检测是否在群组，优先移除
-        ''' 
+            检查菜品是否存在于某个群组，优先检测是否在群组，优先移除
+            若遇到多个匹配（一个纯文字匹配，一个CQ码前文字完全匹配），只返回第一个
+        '''
         if isinstance(gid, str):
             if gid in self._eating["group_food"]:
-                if _food in self._eating["group_food"][gid]:
-                    return FoodLoc.IN_GROUP
+                for food in self._eating["group_food"][gid]:
+                    # food is the full name or _food matches the food name before CQ code
+                    if _food == food or _food == food.split("[CQ:image")[0]:
+                        return FoodLoc.IN_GROUP, food
         
-        if _food in self._eating["basic_food"]:
-            return FoodLoc.IN_BASIC
+        for food in self._eating["basic_food"]:
+            if _food == food or _food == food.split("[CQ:image")[0]:
+                return FoodLoc.IN_BASIC, food
         
-        return FoodLoc.NOT_EXISTS
+        return FoodLoc.NOT_EXISTS, ""
 
-    def add_group_food(self, event: GroupMessageEvent, new_food: str) -> MessageSegment:
+    def add_group_food(self, event: GroupMessageEvent, new_food: str) -> str:
         '''
-            添加至群菜单中 GROUP_ADMIN | GROUP_OWNER 权限
+            添加至群菜单
         '''
         uid = str(event.user_id)
         gid = str(event.group_id)
@@ -142,64 +139,73 @@ class EatingManager:
 
         self._eating = load_json(self._eating_json)
         self._init_data(gid, uid)
-        status: FoodLoc = self._is_food_exists(new_food, gid)
+        status, _ = self._is_food_exists(new_food, gid)
         
         if status == FoodLoc.IN_BASIC:
-            msg = f"{new_food} 已在基础菜单中~"
+            msg = f"已在基础菜单中~"
         elif status == FoodLoc.IN_GROUP:
-            msg = f"{new_food} 已在群特色菜单中~"
+            msg = f"已在群特色菜单中~"
         else:
+            # If image included, save it, return the path in string
             self._eating["group_food"][gid].append(new_food)
-            msg = f"{new_food} 已加入群特色菜单~"
+            msg = f"已加入群特色菜单~"
         
         save_json(self._eating_json, self._eating)
-        return MessageSegment.text(msg)
+        return msg
 
-    def add_basic_food(self, new_food: str) -> MessageSegment:
+    def add_basic_food(self, new_food: str) -> str:
         '''
-            添加至基础菜单 SUPERUSER 权限
+            添加至基础菜单
         '''
         self._eating = load_json(self._eating_json)
         msg: str = ""
-        status: FoodLoc = self._is_food_exists(new_food)
+        status, _ = self._is_food_exists(new_food)
         
         if status == FoodLoc.IN_BASIC:
-            msg = f"{new_food} 已在基础菜单中~"
+            msg = f"已在基础菜单中~"
         else:
-            # If food in group menu, move it to basic menu from all groups'. Check all groups' menu.
+            # Even food is in groups' menu, it won't be affected when to pick
             self._eating["basic_food"].append(new_food)
-            msg = f"{new_food} 已加入基础菜单~"
+            msg = f"已加入基础菜单~"
 
         save_json(self._eating_json, self._eating)
-        return MessageSegment.text(msg)
+        return msg
 
-    def remove_food(self, event: GroupMessageEvent, food_to_remove: str) -> MessageSegment:
+    def remove_food(self, event: GroupMessageEvent, food_to_remove: str) -> str:
         '''
-            从基础菜单移除，需SUPERUSER 权限
+            从基础菜单移除，需SUPERUSER 权限（群聊与私聊）
             从群菜单中移除，需GROUP_ADMIN | GROUP_OWNER 权限
         '''
         uid = str(event.user_id)
         gid = str(event.group_id)
         msg: str = ""
+        res: bool = True
         
         self._eating = load_json(self._eating_json)
         self._init_data(gid, uid)
-        status: FoodLoc = self._is_food_exists(food_to_remove, gid)
+        status, food_fullname = self._is_food_exists(food_to_remove, gid)
 
         if status == FoodLoc.IN_GROUP:
-            self._eating["group_food"][gid].remove(food_to_remove)
+            self._eating["group_food"][gid].remove(food_fullname)
+            # Return the food name user input instead of full name
             msg = f"{food_to_remove} 已从群菜单中删除~"
         elif status == FoodLoc.IN_BASIC:
             if uid not in what2eat_config.superusers:
                 msg = f"{food_to_remove} 在基础菜单中，非超管不可操作哦~"
             else:
-                self._eating["basic_food"].remove(food_to_remove)
+                self._eating["basic_food"].remove(food_fullname)
                 msg = f"{food_to_remove} 已从基础菜单中删除~"
         else:
             msg = f"{food_to_remove} 不在菜单中哦~"
+            
+        # If an image included, unlink it
+        if "[CQ:image" in food_fullname:
+            res = delete_cq_image(food_fullname)
+            if not res:
+                msg += "\n但配图删除出错，图片可能不存在"
         
         save_json(self._eating_json, self._eating)
-        return MessageSegment.text(msg)
+        return msg
     
     def reset_count(self) -> None:
         '''
@@ -213,14 +219,14 @@ class EatingManager:
         save_json(self._eating_json, self._eating)
         
     def pick_one_drink(self) -> Tuple[str, str]:
-        self._drinks: Dict[str, List[str]] = load_json(self._drinks_json)
-        _branch = random.choice(list(self._drinks))
-        _drink = random.choice(self._drinks[_branch])
+        _drinks: Dict[str, List[str]] = load_json(self._drinks_json)
+        _branch = random.choice(list(_drinks))
+        _drink = random.choice(_drinks[_branch])
         
         return _branch, _drink
 
     # ------------------------- Menu -------------------------
-    def show_group_menu(self, gid: str) -> Tuple[int, MessageSegment]:
+    def show_group_menu(self, gid: str) -> Tuple[bool, Union[Message, MessageSegment]]:
         msg: str = ""
         self._eating = load_json(self._eating_json)
         self._init_data(gid)
@@ -231,11 +237,11 @@ class EatingManager:
             for food in self._eating["group_food"][gid]:
                 msg += f"\n{food}"
             
-            return len(self._eating["group_food"][gid]), MessageSegment.text(msg)
+            return len(self._eating["group_food"][gid]) > 20, Message(msg)
         
         return 0, MessageSegment.text("还没有群特色菜单呢，请[添加 菜名]🤤")
 
-    def show_basic_menu(self) -> Tuple[int, MessageSegment]:
+    def show_basic_menu(self) -> Tuple[bool, Union[Message, MessageSegment]]:
         msg: str = ""
         self._eating = load_json(self._eating_json)
 
@@ -244,7 +250,7 @@ class EatingManager:
             for food in self._eating["basic_food"]:
                 msg += f"\n{food}"
             
-            return len(self._eating["basic_food"]), MessageSegment.text(msg)
+            return len(self._eating["basic_food"]) > 20, Message(msg)
         
         return 0, MessageSegment.text("还没有基础菜单呢，请[添加 菜名]🤤")
 

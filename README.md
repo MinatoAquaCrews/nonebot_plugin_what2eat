@@ -20,8 +20,8 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
     <img src="https://img.shields.io/badge/nonebot2-2.0.0b3+-green">
   </a>
   
-  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.3">
-    <img src="https://img.shields.io/github/v/release/MinatoAquaCrews/nonebot_plugin_what2eat?color=orange">
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.4a1">
+    <img src="https://img.shields.io/github/v/release/MinatoAquaCrews/nonebot_plugin_what2eat?color=orange&include_prereleases">
   </a>
 
   <a href="https://www.codefactor.io/repository/github/MinatoAquaCrews/nonebot_plugin_what2eat">
@@ -32,11 +32,11 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
 
 ## 版本
 
-v0.3.3 今天喝什么！
+v0.3.4a1 今天喝什么！菜品可以添加配图啦！
 
 ⚠ 适配nonebot2-2.0.0b3+
 
-[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.3)
+[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.4a1)
 
 ## 安装
 
@@ -52,18 +52,19 @@ v0.3.3 今天喝什么！
 
 1. 🔥 **新增** 选择恐惧症？让Bot建议你今天吃/喝什么！
 
-    ⚠ 新增一点点、茶颜悦色、蜜雪冰城、茶百道、瑞幸咖啡菜单！
+    ⚠ 新增一点点、茶颜悦色、蜜雪冰城、茶百道、瑞幸咖啡、CoCo都可！
 
-2. ⚠ 插件配置：
-   
+    ⚠ 预置菜单加入了更多菜品！
+
+2. **插件配置**
+
     ``` python
     WHAT2EAT_PATH="your-path-to-resource"			# 资源路径
-    USE_PRESET_MENU=false							# 是否从repo中下载预置基础菜单，默认为False
+    USE_PRESET_MENU=false							# 是否从repo中下载预置基础菜单，默认为False，请注意会覆盖原有的文件！
     USE_PRESET_GREETINGS=false                    	# 是否从repo中下载预置问候语，默认为False
     EATING_LIMIT=5									# 每个时段吃什么的次数上限，默认5次；每日6点、11点、17点、22点自动刷新
     GREETING_GROUPS_ID=["123456789", "987654321"]	# 默认开启小助手群组，或{"123456789", "987654321"}
     SUPERUSERS={"12345678"}                       	# 同nonebot超管配置
-    NICKNAME={"Bot"}                                # 同nonebot机器人昵称配置
     ```
 
 3. 群管理可自行添加或移除群特色菜单（位于`eating.json`下`[group_food][group_id]`）；超管可添加或移除基础菜单（`[basic_food]`）；
@@ -78,16 +79,14 @@ v0.3.3 今天喝什么！
 
     ⚠ 群吃饭小助手启用配置存于`greetings.json`的`groups_id`字段
 
-6. 初次使用该插件时，若不存在`eating.json`与`greetings.json`文件，设置`USE_PRESET_MENU`及`USE_PRESET_GREETINGS`可从仓库中尝试下载；会尝试从仓库中下载`drinks.json`。若资源下载失败且本地不存在，则抛出错误。
+6. 初次使用该插件时，若不存在`eating.json`与`greetings.json`文件，设置`USE_PRESET_MENU`及`USE_PRESET_GREETINGS`可从仓库中尝试下载；会尝试从仓库中下载`drinks.json`。若资源下载失败且本地也不存在，则抛出错误。
 
     ```python
     USE_PRESET_MENU=false
     USE_PRESET_GREETINGS=false
     ```
 
-    ⚠ 从仓库下载会**覆写**原有配置！建议老用户按需开启从仓库下载设置
-
-    ⚠ `v0.3.3`已弃用`v0.2.x`版本旧资源的兼容，请注意
+    ⚠ 从仓库下载会**覆写**原有文件！建议用户按需开启此配置
 
 ## 命令
 
@@ -98,6 +97,8 @@ v0.3.3 今天喝什么！
     ⚠ 与吃什么共用`EATING_LIMIT`次数
 
 3. [管理员或超管] 添加或移除群菜名：[添加/移除 菜名]；
+
+    💥 添加菜品与加菜可以附配图啦！
 
 4. 查看群菜单：[菜单/群菜单/查看菜单]；
 

@@ -1,16 +1,17 @@
-from typing import Coroutine, Any, List, Dict, Union
-from nonebot import on_command, on_regex, logger
+from typing import Coroutine, Any, List
+from nonebot import on_command, on_regex, logger, require
 from nonebot.typing import T_State
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11 import Bot, GROUP, GROUP_ADMIN, GROUP_OWNER, Message, MessageEvent, MessageSegment, GroupMessageEvent
 from nonebot.params import Depends, Arg, ArgStr, CommandArg, RegexMatched
 from nonebot.matcher import Matcher
-from nonebot_plugin_apscheduler import scheduler
-from .utils import Meals
-from .config import what2eat_config
+from .utils import Meals, save_cq_image
 from .data_source import eating_manager
 
-__what2eat_version__ = "v0.3.3"
+require("nonebot_plugin_apscheduler")
+from nonebot_plugin_apscheduler import scheduler
+
+__what2eat_version__ = "v0.3.4a1"
 __what2eat_notes__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot吃什么
@@ -54,64 +55,68 @@ async def _(event: MessageEvent, args: str = RegexMatched()):
 
 @group_add.handle()
 async def _(event: GroupMessageEvent, args: Message = CommandArg()):
-    args = args.extract_plain_text().strip().split()
-    if not args:
+    args_str: List[str] = args.extract_plain_text().strip().split()
+    if not args_str:
         await group_add.finish("还没输入你要添加的菜品呢~")
-    elif args and len(args) == 1:
-        new_food = args[0]
-    else:
+    elif len(args_str) > 1:
         await group_add.finish("添加菜品参数错误~")
     
-    msg = eating_manager.add_group_food(event, new_food)
-
-    await group_add.finish(msg)
+    # If image included, save it, return the path in string
+    await save_cq_image(args, eating_manager._img_dir)
+    
+    # Record the whole string, including the args after transfering
+    msg: str = eating_manager.add_group_food(event, str(args))
+    
+    if "[CQ:image" in str(args):
+        await group_add.finish(args.append(MessageSegment.text(" " + msg)))
+    else:
+        await group_add.finish(args.append(MessageSegment.text(msg)))
 
 @basic_add.handle()
 async def _(args: Message = CommandArg()):
-    args = args.extract_plain_text().strip().split()
-    if not args:
+    args_str: List[str] = args.extract_plain_text().strip().split()
+    if not args_str:
         await basic_add.finish("还没输入你要添加的菜品呢~")
-    elif args and len(args) == 1:
-        new_food = args[0]
+    elif len(args_str) > 1:
+        await group_add.finish("添加菜品参数错误~")
+
+    # The same as above
+    await save_cq_image(args, eating_manager._img_dir)
+    msg: str = eating_manager.add_basic_food(str(args))
+
+    if "[CQ:image" in str(args):
+        await group_add.finish(args.append(MessageSegment.text(" " + msg)))
     else:
-        await basic_add.finish("添加菜品参数错误~")
-
-    msg = eating_manager.add_basic_food(new_food)
-
-    await basic_add.finish(msg)
+        await group_add.finish(args.append(MessageSegment.text(msg)))
 
 @group_remove.handle()
 async def _(event: GroupMessageEvent, args: Message = CommandArg()):
-    args = args.extract_plain_text().strip().split()
+    args: List[str] = args.extract_plain_text().strip().split()
     if not args:
         await group_remove.finish("还没输入你要移除的菜品呢~")
-    elif args and len(args) == 1:
-        food_to_remove = args[0]
-    else:
+    elif len(args) > 1:
         await group_remove.finish("移除菜品参数错误~")
 
-    msg = eating_manager.remove_food(event, food_to_remove)
+    msg: MessageSegment = eating_manager.remove_food(event, args[0])
 
-    await group_remove.finish(msg)
+    await group_remove.finish(MessageSegment.text(msg))
 
 @show_group_menu.handle()
-async def _(bot: Bot, event: GroupMessageEvent):
+async def _(bot: Bot, matcher: Matcher, event: GroupMessageEvent):
     gid = str(event.group_id)
-    line, msg = eating_manager.show_group_menu(gid)
-    if line > 20:
-        chain = await chain_reply(bot, [], msg)
-        await bot.call_api("send_group_forward_msg", group_id=event.group_id, messages=chain)
+    is_too_many_lines, msg = eating_manager.show_group_menu(gid)
+    if is_too_many_lines:
+        await bot.call_api("send_group_forward_msg", group_id=event.group_id, messages=MessageSegment.node_custom(int(bot.self_id), list(bot.config.nickname)[0], msg))
     else:
-        await show_group_menu.finish(msg)
+        await matcher.finish(msg)
 
 @show_basic_menu.handle()
-async def _(bot: Bot, event: GroupMessageEvent):
-    line, msg = eating_manager.show_basic_menu()
-    if line > 20:
-        chain = await chain_reply(bot, [], msg)
-        await bot.call_api("send_group_forward_msg", group_id=event.group_id, messages=chain)
+async def _(bot: Bot, matcher: Matcher, event: GroupMessageEvent):
+    is_too_many_lines, msg = eating_manager.show_basic_menu()
+    if is_too_many_lines:
+        await bot.call_api("send_group_forward_msg", group_id=event.group_id, messages=MessageSegment.node_custom(int(bot.self_id), list(bot.config.nickname)[0], msg))
     else:
-        await show_basic_menu.finish(msg)
+        await matcher.finish(msg)
 
 # ------------------------- Greetings -------------------------
 @greeting_on.handle()
@@ -263,15 +268,3 @@ async def time_for_dinner():
 async def time_for_midnight():
     await eating_manager.do_greeting(Meals.MIDNIGHT)
     logger.info(f"已群发夜宵提醒")
-
-async def chain_reply(bot: Bot, chain: List[Dict[str, Union[str, Dict[str, Union[str, MessageSegment]]]]], msg: MessageSegment) -> List[Dict[str, Union[str, Dict[str, Union[str, MessageSegment]]]]]:
-    data = {
-        "type": "node",
-        "data": {
-            "name": f"{list(what2eat_config.nickname)[0]}",
-            "uin": f"{bot.self_id}",
-            "content": msg
-        },
-    }
-    chain.append(data)
-    return chain
