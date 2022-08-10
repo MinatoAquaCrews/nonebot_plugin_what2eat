@@ -11,7 +11,7 @@ from .data_source import eating_manager
 require("nonebot_plugin_apscheduler")
 from nonebot_plugin_apscheduler import scheduler
 
-__what2eat_version__ = "v0.3.4a2"
+__what2eat_version__ = "v0.3.4rc1"
 __what2eat_notes__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot吃什么
