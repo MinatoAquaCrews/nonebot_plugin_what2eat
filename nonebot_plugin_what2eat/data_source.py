@@ -1,8 +1,8 @@
 from nonebot.adapters.onebot.v11 import Message, MessageEvent, GroupMessageEvent, PrivateMessageEvent, MessageSegment
 from nonebot.adapters.onebot.v11 import ActionFailed
 from nonebot import get_bot, logger
-import random
 from pathlib import Path
+import random
 from typing import Optional, Union, List, Dict, Tuple
 from .utils import *
 from .config import what2eat_config
@@ -111,11 +111,11 @@ class EatingManager:
                 )
             )
 
-    def _is_food_exists(self, _food: str, _search: SearchLoc, gid: Optional[str] = None) -> Tuple[FoodLoc, Union[str, List[str]]]:
+    def _is_food_exists(self, _food: str, _search: SearchLoc, gid: Optional[str] = None) -> Tuple[FoodLoc, str]:
         '''
-            检查菜品是否存在于某个群组/全局，优先检测是否在群组，返回菜品所在区域及其全称（或列表）；
-            - gid = None, 搜索群组；
-            - _search: IN_BASIC, IN_GROUP or IN_GLOBAL（本群与基础）
+            检查菜品是否存在于某个群组/全局，优先检测是否在群组，返回菜品所在区域及其全称；
+            - gid = None, 搜索群组
+            - _search: IN_BASIC, IN_GROUP or IN_GLOBAL（全局指本群与基础菜单）
             
             群组添加菜品: gid=str, _search=IN_GLOBAL
             优先检测群组是否匹配，返回：
@@ -126,14 +126,12 @@ class EatingManager:
             IN_BASIC, NOT_EXISTS
             
             群组移除菜品: gid=str, _search=IN_GLOBAL
-            返回：IN_BASIC, IN_GROUP, NOT_EXISTS
+            全局检测，返回：IN_BASIC, IN_GROUP, NOT_EXISTS
             
             Notes:
             1. 添加时，文字与图片一一对应才认为是相同的菜品
             2. 移除时，移除文字匹配的第一个；若配图也被移除，同时移除配图相同的其余菜品（即使在基础菜单中）
         '''
-        _ret: List[str] = []
-        
         if _search == SearchLoc.IN_GROUP or _search == SearchLoc.IN_GLOBAL:
             if isinstance(gid, str):
                 if gid in self._eating["group_food"]:
@@ -274,8 +272,8 @@ class EatingManager:
         
     def pick_one_drink(self) -> Tuple[str, str]:
         _drinks: Dict[str, List[str]] = load_json(self._drinks_json)
-        _branch = random.choice(list(_drinks))
-        _drink = random.choice(_drinks[_branch])
+        _branch: str = random.choice(list(_drinks))
+        _drink: str = random.choice(_drinks[_branch])
         
         return _branch, _drink
 
@@ -330,7 +328,7 @@ class EatingManager:
         
         save_json(self._greetings_json, self._greetings)
         
-    def which_meals(self, input_cn: str) -> Union[Meals, None]:
+    def which_meals(self, input_cn: str) -> Optional[Meals]:
         '''
             Judge which meals user's input indicated
         ''' 
@@ -397,9 +395,9 @@ class EatingManager:
                     except ActionFailed as e:
                         logger.warning(f"发送群 {gid} 失败：{e}")
     
-    def _get_greeting(self, meal: Meals) -> Union[MessageSegment, None]:
+    def _get_greeting(self, meal: Meals) -> Optional[MessageSegment]:
         '''
-            Get greeting, return None if empty
+            Get a greeting, return None if empty
         ''' 
         if meal.value[0] in self._greetings:
             if len(self._greetings.get(meal.value[0])) > 0:
