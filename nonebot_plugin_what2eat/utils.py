@@ -18,9 +18,14 @@ class Meals(Enum):
     MIDNIGHT = ["midnight", "夜宵", "宵夜"]
     
 class FoodLoc(Enum):
-    IN_BASIC = "In_Basic"
-    IN_GROUP = "In_Group"
-    NOT_EXISTS = "Not_Exists"
+    IN_BASIC = "In basic"
+    IN_GROUP = "In group"
+    NOT_EXISTS = "Not exists"
+
+class SearchLoc(Enum):
+    IN_BASIC = "In basic"
+    IN_GROUP = "In group"
+    IN_GLOBAL = "In global"
     
 EatingEnough_List: List[str] = [
     "你今天已经吃得够多了！",
@@ -112,3 +117,6 @@ def delete_cq_image(str_cq: str) -> bool:
         return True
     
     return False
+
+def get_cq_image_path(str_cq: str) -> str:
+    return str_cq[str_cq.find("file://") + 7: str_cq.find(".image") + 6]

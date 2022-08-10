@@ -111,23 +111,46 @@ class EatingManager:
                 )
             )
 
-    def _is_food_exists(self, _food: str, gid: Optional[str] = None) -> Tuple[FoodLoc, str]:
+    def _is_food_exists(self, _food: str, _search: SearchLoc, gid: Optional[str] = None) -> Tuple[FoodLoc, Union[str, List[str]]]:
         '''
-            检查菜品是否存在于某个群组，优先检测是否在群组，优先移除
-            若遇到多个匹配（一个纯文字匹配，一个CQ码前文字完全匹配），只返回第一个
+            检查菜品是否存在于某个群组/全局，优先检测是否在群组，返回菜品所在区域及其全称（或列表）；
+            - gid = None, 搜索群组；
+            - _search: IN_BASIC, IN_GROUP or IN_GLOBAL（本群与基础）
+            
+            群组添加菜品: gid=str, _search=IN_GLOBAL
+            优先检测群组是否匹配，返回：
+            IN_BASIC, IN_GROUP, NOT_EXISTS
+            
+            基础添加菜品: gid=None, _search=IN_BASIC
+            仅检测基础菜单是否存在，返回：
+            IN_BASIC, NOT_EXISTS
+            
+            群组移除菜品: gid=str, _search=IN_GLOBAL
+            返回：IN_BASIC, IN_GROUP, NOT_EXISTS
+            
+            Notes:
+            1. 添加时，文字与图片一一对应才认为是相同的菜品
+            2. 移除时，移除文字匹配的第一个；若配图也被移除，同时移除配图相同的其余菜品（即使在基础菜单中）
         '''
-        if isinstance(gid, str):
-            if gid in self._eating["group_food"]:
-                for food in self._eating["group_food"][gid]:
-                    # food is the full name or _food matches the food name before CQ code
-                    if _food == food or _food == food.split("[CQ:image")[0]:
-                        return FoodLoc.IN_GROUP, food
+        _ret: List[str] = []
         
-        for food in self._eating["basic_food"]:
-            if _food == food or _food == food.split("[CQ:image")[0]:
-                return FoodLoc.IN_BASIC, food
-        
-        return FoodLoc.NOT_EXISTS, ""
+        if _search == SearchLoc.IN_GROUP or _search == SearchLoc.IN_GLOBAL:
+            if isinstance(gid, str):
+                if gid in self._eating["group_food"]:
+                    for food in self._eating["group_food"][gid]:
+                        # food is the full name or _food matches the food name before CQ code
+                        if _food == food or _food == food.split("[CQ:image")[0]:
+                            return FoodLoc.IN_GROUP, food
+
+                    if _search == SearchLoc.IN_GROUP:
+                        return FoodLoc.NOT_EXISTS, ""
+
+        if _search == SearchLoc.IN_BASIC or _search == SearchLoc.IN_GLOBAL:
+            for food in self._eating["basic_food"]:
+                if _food == food or _food == food.split("[CQ:image")[0]:
+                    return FoodLoc.IN_BASIC, food
+                    
+            return FoodLoc.NOT_EXISTS, ""
 
     def add_group_food(self, event: GroupMessageEvent, new_food: str) -> str:
         '''
@@ -139,7 +162,7 @@ class EatingManager:
 
         self._eating = load_json(self._eating_json)
         self._init_data(gid, uid)
-        status, _ = self._is_food_exists(new_food, gid)
+        status, _ = self._is_food_exists(new_food, SearchLoc.IN_GLOBAL, gid) # new food may include cq
         
         if status == FoodLoc.IN_BASIC:
             msg = f"已在基础菜单中~"
@@ -159,7 +182,7 @@ class EatingManager:
         '''
         self._eating = load_json(self._eating_json)
         msg: str = ""
-        status, _ = self._is_food_exists(new_food)
+        status, _ = self._is_food_exists(new_food, SearchLoc.IN_BASIC, None)  # new food may include cq
         
         if status == FoodLoc.IN_BASIC:
             msg = f"已在基础菜单中~"
@@ -175,6 +198,7 @@ class EatingManager:
         '''
             从基础菜单移除，需SUPERUSER 权限（群聊与私聊）
             从群菜单中移除，需GROUP_ADMIN | GROUP_OWNER 权限
+            移除时，移除文字匹配的第一个；若配图也被移除，同时移除配图相同的其余菜品（即使在基础菜单中）
         '''
         uid = str(event.user_id)
         gid = str(event.group_id)
@@ -183,7 +207,7 @@ class EatingManager:
         
         self._eating = load_json(self._eating_json)
         self._init_data(gid, uid)
-        status, food_fullname = self._is_food_exists(food_to_remove, gid)
+        status, food_fullname = self._is_food_exists(food_to_remove, SearchLoc.IN_GLOBAL, gid)   # food_to_remove dosen't include cq
 
         if status == FoodLoc.IN_GROUP:
             self._eating["group_food"][gid].remove(food_fullname)
@@ -201,11 +225,41 @@ class EatingManager:
         # If an image included, unlink it
         if "[CQ:image" in food_fullname:
             res = delete_cq_image(food_fullname)
+            if res:
+                _deleted: Path = get_cq_image_path(food_fullname)
+                # Search all the foods with cq image path
+                _matched: List[str] = self._remove_food_matched(_deleted)
+                
+                if len(_matched) > 0:
+                    for i in range(0, len(_matched)):
+                        msg += f"、{_matched[i]}" if i > 0 else f"\n由于配图相同，{_matched[i]}"
+                    
+                    msg += " 一并移除"
+                    
             if not res:
                 msg += "\n但配图删除出错，图片可能不存在"
         
         save_json(self._eating_json, self._eating)
         return msg
+    
+    def _remove_food_matched(self, _deleted: str) -> List[str]:
+        '''
+            Remove all the foods with the same image path
+            Return the list of deleted foods in this function
+        '''
+        _del_list: List[str] = []
+        for food in self._eating["basic_food"]:
+            if _deleted in food:
+                self._eating["basic_food"].remove(food)   
+                _del_list.append(food.split("[CQ:image")[0] if "[CQ:image" in food else food)
+        
+        for gid in self._eating["group_food"]:
+            for food in self._eating["group_food"][gid]:
+                if _deleted in food:
+                    self._eating["group_food"][gid].remove(food)
+                    _del_list.append(food.split("[CQ:image")[0] if "[CQ:image" in food else food)
+        
+        return _del_list
     
     def reset_count(self) -> None:
         '''
@@ -228,6 +282,7 @@ class EatingManager:
     # ------------------------- Menu -------------------------
     def show_group_menu(self, gid: str) -> Tuple[bool, Union[Message, MessageSegment]]:
         msg: str = ""
+        food_with_img: int = 0
         self._eating = load_json(self._eating_json)
         self._init_data(gid)
         save_json(self._eating_json, self._eating)
@@ -236,21 +291,26 @@ class EatingManager:
             msg += f"---群特色菜单---"
             for food in self._eating["group_food"][gid]:
                 msg += f"\n{food}"
+                if "[CQ:image" in food:
+                    food_with_img += 1
             
-            return len(self._eating["group_food"][gid]) > 20, Message(msg)
+            return len(self._eating["group_food"][gid]) > 20 or (food_with_img > 4 and len(self._eating["group_food"][gid]) > 15), Message(msg)
         
         return 0, MessageSegment.text("还没有群特色菜单呢，请[添加 菜名]🤤")
 
     def show_basic_menu(self) -> Tuple[bool, Union[Message, MessageSegment]]:
         msg: str = ""
+        food_with_img: int = 0
         self._eating = load_json(self._eating_json)
 
         if len(self._eating["basic_food"]) > 0:
             msg += f"---基础菜单---"
             for food in self._eating["basic_food"]:
                 msg += f"\n{food}"
+                if "[CQ:image" in food:
+                    food_with_img += 1
             
-            return len(self._eating["basic_food"]) > 20, Message(msg)
+            return len(self._eating["basic_food"]) > 20 or (food_with_img > 4 and len(self._eating["basic_food"]) > 15), Message(msg)
         
         return 0, MessageSegment.text("还没有基础菜单呢，请[添加 菜名]🤤")
 

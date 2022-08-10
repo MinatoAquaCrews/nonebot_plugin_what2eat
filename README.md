@@ -20,7 +20,7 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
     <img src="https://img.shields.io/badge/nonebot2-2.0.0b3+-green">
   </a>
   
-  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.4a1">
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.4a2">
     <img src="https://img.shields.io/github/v/release/MinatoAquaCrews/nonebot_plugin_what2eat?color=orange&include_prereleases">
   </a>
 
@@ -32,17 +32,17 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
 
 ## 版本
 
-v0.3.4a1 今天喝什么！菜品可以添加配图啦！
+v0.3.4a2 今天喝什么！菜品可以添加配图啦！
 
 ⚠ 适配nonebot2-2.0.0b3+
 
-[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.4a1)
+[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.4a2)
 
 ## 安装
 
 1. 通过`pip`或`nb`安装；
 
-2. 数据默认位于`./resource`下`eating.json`、`drinks.json`与`greetings.json`，可通过设置`env`下`WHAT2EAT_PATH`更改；基础菜单、群特色菜单及群友询问Bot次数会记录在该文件中：
+2. 数据默认位于`./resource`下`eating.json`、`drinks.json`与`greetings.json`，菜品的附图储存于`./resource/img`下。可通过设置`env`下`WHAT2EAT_PATH`更改；
 
     ```python
     WHAT2EAT_PATH="your-path-to-resource"
@@ -52,9 +52,7 @@ v0.3.4a1 今天喝什么！菜品可以添加配图啦！
 
 1. 🔥 **新增** 选择恐惧症？让Bot建议你今天吃/喝什么！
 
-    👉 新增一点点、茶颜悦色、蜜雪冰城、茶百道、瑞幸咖啡、CoCo都可！
-
-    👉 预置菜单加入了更多菜品！
+    👉 新增一点点、茶颜悦色、蜜雪冰城、茶百道、瑞幸咖啡、CoCo都可！预置菜单加入了更多菜品！
 
 2. **插件配置**
 
@@ -62,12 +60,16 @@ v0.3.4a1 今天喝什么！菜品可以添加配图啦！
     WHAT2EAT_PATH="your-path-to-resource"			# 资源路径
     USE_PRESET_MENU=false							# 是否从repo中下载预置基础菜单，默认为False，请注意会覆盖原有的文件！
     USE_PRESET_GREETINGS=false                    	# 是否从repo中下载预置问候语，默认为False
-    EATING_LIMIT=5									# 每个时段吃什么的次数上限，默认5次；每日6点、11点、17点、22点自动刷新
+    EATING_LIMIT=5									# 每个时段吃/喝什么次数上限，默认5次；每日6点、11点、17点、22点自动刷新
     GREETING_GROUPS_ID=["123456789", "987654321"]	# 默认开启小助手群组，或{"123456789", "987654321"}
     SUPERUSERS={"12345678"}							# 同nonebot超管配置
     ```
 
 3. 群管理可自行添加或移除群特色菜单（位于`eating.json`下`[group_food][group_id]`）；超管可添加或移除基础菜单（`[basic_food]`）；
+
+    - 菜品文字与配图一一对应才视为相同的菜品，例如：文字相同而配图不同、文字与文字+配图、或文字不同而配图相同，这几种均视为不同菜品
+
+    - 当移除的菜品包含配图时，会一并移除相同配图的其他菜品
 
 4. 各群特色菜单相互独立；各群每个时间段询问Bot建议次数独立；Bot会综合各群菜单+基础菜单给出建议；
 
