@@ -1,4 +1,17 @@
 [[package]]
+name = "aiofiles"
+version = "0.8.0"
+description = "File support for asyncio."
+category = "main"
+optional = false
+python-versions = ">=3.6,<4.0"
+
+[package.source]
+type = "legacy"
+url = "https://mirrors.tencent.com/pypi/simple"
+reference = "tencentyun"
+
+[[package]]
 name = "anyio"
 version = "3.6.1"
 description = "High level compatibility layer for multiple asynchronous event loop implementations"
@@ -724,9 +737,13 @@ reference = "tencentyun"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.3"
-content-hash = "c43eeaad18191be7e31275f1aa5eb430635f3d43a92de1d5c0bbf2bdb9c14ff0"
+content-hash = "3d0e0afd40e48de1c0477c000c75acfc68db86181d998aa02275dce758d3fb36"
 
 [metadata.files]
+aiofiles = [
+    {file = "aiofiles-0.8.0-py3-none-any.whl", hash = "sha256:7a973fc22b29e9962d0897805ace5856e6a566ab1f0c8e5c91ff6c866519c937"},
+    {file = "aiofiles-0.8.0.tar.gz", hash = "sha256:8334f23235248a3b2e83b2c3a78a22674f39969b96397126cc93664d9a901e59"},
+]
 anyio = [
     {file = "anyio-3.6.1-py3-none-any.whl", hash = "sha256:cb29b9c70620506a9a8f87a309591713446953302d7d995344d0d7c6c0c9a7be"},
     {file = "anyio-3.6.1.tar.gz", hash = "sha256:413adf95f93886e442aea925f3ee43baa5a765a64a0f52c6081894f9992fdd0b"},

@@ -1,6 +1,6 @@
 from pathlib import Path
 from pydantic import BaseModel, Extra
-from typing import List, Dict, Set, Union, Any
+from typing import List, Dict, Set, Union, Any, Optional
 from nonebot import get_driver, logger
 from .utils import save_json, Meals
 import httpx
@@ -16,7 +16,6 @@ class PluginConfig(BaseModel, extra=Extra.ignore):
     eating_limit: int = 5
     greeting_groups_id: Set[str] = set()
     superusers: Set[str] = set()
-    nickname: Set[str] = {"Bot"}
     
 driver = get_driver()
 what2eat_config: PluginConfig = PluginConfig.parse_obj(driver.config.dict())
@@ -28,7 +27,7 @@ class DownloadError(Exception):
     def __str__(self):
         return self.msg
     
-async def download_url(url: str) -> Union[Any, None]:
+async def download_url(url: str) -> Optional[Any]:
     async with httpx.AsyncClient() as client:
         for i in range(3):
             try:
@@ -57,6 +56,9 @@ async def download_file(_file: Path, _name: str) -> None:
 async def what2eat_check() -> None:
     if not what2eat_config.what2eat_path.exists():
         what2eat_config.what2eat_path.mkdir(parents=True, exist_ok=True)
+    
+    if not (what2eat_config.what2eat_path / "img").exists():
+        (what2eat_config.what2eat_path / "img").mkdir(parents=True, exist_ok=True)
     
     '''
         If eating.json doesn't exist or eating.json exists but f.get["basic_food"] doesn't exist and USE_PRESET_MENU is True, download
