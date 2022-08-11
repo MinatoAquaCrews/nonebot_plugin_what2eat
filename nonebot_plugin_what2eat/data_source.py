@@ -226,13 +226,10 @@ class EatingManager:
             if res:
                 _deleted: Path = get_cq_image_path(food_fullname)
                 # Search all the foods with cq image path
-                _matched: List[str] = self._remove_food_matched(_deleted)
+                _flag: bool = self._remove_food_matched(_deleted)
                 
-                if len(_matched) > 0:
-                    for i in range(0, len(_matched)):
-                        msg += f"、{_matched[i]}" if i > 0 else f"\n由于配图相同，{_matched[i]}"
-                    
-                    msg += " 一并移除"
+                if _flag:
+                    msg += f"\n相同配图的其他菜品一并被移除"
                     
             if not res:
                 msg += "\n但配图删除出错，图片可能不存在"
@@ -240,24 +237,24 @@ class EatingManager:
         save_json(self._eating_json, self._eating)
         return msg
     
-    def _remove_food_matched(self, _deleted: str) -> List[str]:
+    def _remove_food_matched(self, _deleted: str) -> bool:
         '''
             Remove all the foods with the same image path
-            Return the list of deleted foods in this function
+            Return whether other images removed
         '''
-        _del_list: List[str] = []
+        _flag: bool = False
         for food in self._eating["basic_food"]:
             if _deleted in food:
                 self._eating["basic_food"].remove(food)   
-                _del_list.append(food.split("[CQ:image")[0] if "[CQ:image" in food else food)
+                _flag = True
         
         for gid in self._eating["group_food"]:
             for food in self._eating["group_food"][gid]:
                 if _deleted in food:
                     self._eating["group_food"][gid].remove(food)
-                    _del_list.append(food.split("[CQ:image")[0] if "[CQ:image" in food else food)
+                    _flag = True
         
-        return _del_list
+        return _flag
     
     def reset_count(self) -> None:
         '''
