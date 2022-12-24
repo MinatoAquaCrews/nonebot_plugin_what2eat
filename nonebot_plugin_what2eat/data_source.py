@@ -41,8 +41,8 @@ class EatingManager:
             else:
                 return MessageSegment.text("还没有菜单呢，就先饿着肚子吧，请[添加 菜名]🤤")
             
-        uid = str(event.user_id)
-        gid = str(event.group_id)
+        uid: str = str(event.user_id)
+        gid: str = str(event.group_id)
         food_list: List[str] = []
         
         self._eating = load_json(self._eating_json)
@@ -86,8 +86,8 @@ class EatingManager:
                 )
             )
         
-        uid = str(event.user_id)
-        gid = str(event.group_id)
+        uid: str = str(event.user_id)
+        gid: str = str(event.group_id)
         
         self._eating = load_json(self._eating_json)
         self._init_data(gid, uid)
@@ -154,8 +154,8 @@ class EatingManager:
         '''
             添加至群菜单
         '''
-        uid = str(event.user_id)
-        gid = str(event.group_id)
+        uid: str = str(event.user_id)
+        gid: str = str(event.group_id)
         msg: str = ""
 
         self._eating = load_json(self._eating_json)
@@ -198,8 +198,8 @@ class EatingManager:
             从群菜单中移除，需GROUP_ADMIN | GROUP_OWNER 权限
             移除时，移除文字匹配的第一个；若配图也被移除，同时移除配图相同的其余菜品（即使在基础菜单中）
         '''
-        uid = str(event.user_id)
-        gid = str(event.group_id)
+        uid: str = str(event.user_id)
+        gid: str = str(event.group_id)
         msg: str = ""
         res: bool = True
         
@@ -403,8 +403,4 @@ class EatingManager:
         
         return None
 
-eating_manager = EatingManager()      
-
-__all__ = [
-    eating_manager
-]
+eating_manager = EatingManager()

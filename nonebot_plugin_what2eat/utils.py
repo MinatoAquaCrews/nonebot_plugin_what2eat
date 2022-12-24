@@ -33,7 +33,7 @@ EatingEnough_List: List[str] = [
     "害搁这吃呢？不工作的吗？",
     "再吃肚子就要爆炸咯~",
     "你是米虫吗？今天碳水要爆炸啦！",
-    "你去码头整点薯条吧🍟"
+    "去码头整点薯条吧🍟"
 ]
 
 DrinkingEnough_List: List[str] = [
@@ -53,14 +53,10 @@ def load_json(_file: Path) -> Any:
         return json.load(f)
  
 async def get_image_from_url(url: str) -> Optional[bytes]:
-    headers = {
-        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",  # noqa
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36 Edg/95.0.1020.53",  # noqa
-    }
     async with httpx.AsyncClient() as client:
         for i in range(3):
             try:
-                resp = await client.get(url, headers=headers)
+                resp = await client.get(url)
                 if resp.status_code != 200:
                     continue
                 return resp.content

@@ -1,5 +1,6 @@
 from typing import Coroutine, Any, List
 from nonebot import on_command, on_regex, logger, require
+from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11 import Bot, GROUP, GROUP_ADMIN, GROUP_OWNER, Message, MessageEvent, MessageSegment, GroupMessageEvent
@@ -11,8 +12,8 @@ from .data_source import eating_manager
 require("nonebot_plugin_apscheduler")
 from nonebot_plugin_apscheduler import scheduler
 
-__what2eat_version__ = "v0.3.4"
-__what2eat_notes__ = f'''
+__what2eat_version__ = "v0.3.5a1"
+__what2eat_usages__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot吃什么
 [xx喝xx]    问bot喝什么
@@ -23,6 +24,16 @@ __what2eat_notes__ = f'''
 [基础菜单] 查看基础菜单
 [开启/关闭小助手] 开启/关闭吃饭小助手
 [添加/删除问候 时段 问候语] 添加/删除吃饭小助手问候语'''.strip()
+
+__plugin_meta__ = PluginMetadata(
+    name="今天吃什么？",
+    description="选择恐惧症？让Bot建议你今天吃/喝什么！",
+    usage=__what2eat_usages__,
+    extra={
+        "author": "KafCoppelia <k740677208@gmail.com>",
+        "version": __what2eat_version__
+    }
+)
 
 what2eat = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)吃(什么|啥|点啥)(帮助)?$", priority=15)
 what2drink = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)喝(什么|啥|点啥)(帮助)?$", priority=15)
@@ -40,7 +51,7 @@ remove_greeting = on_command("删除问候", aliases={"删除问候语", "移除
 @what2eat.handle()
 async def _(event: MessageEvent, args: str = RegexMatched()):
     if args[-2:] == "帮助":
-        await what2eat.finish(__what2eat_notes__)
+        await what2eat.finish(__what2eat_usages__)
     
     msg = eating_manager.get2eat(event)
     await what2eat.finish(msg)
