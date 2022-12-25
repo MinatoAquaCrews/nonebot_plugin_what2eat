@@ -674,7 +674,7 @@ reference = "tencentyun"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "b30c38754a39587e6a6fb950b003a75508d7934fa5b11fd05b4739a6bfba2ed1"
+content-hash = "7a3e5a8857607327a14ee8c6306620750dff3de3085f7cec2fc78da3686a5538"
 
 [metadata.files]
 aiofiles = [
