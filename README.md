@@ -17,26 +17,30 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
   </a>
   
   <a href="https://github.com/nonebot/nonebot2">
-    <img src="https://img.shields.io/badge/nonebot2-2.0.0b3+-green">
+    <img src="https://img.shields.io/badge/nonebot2-2.0.0rc1+-green">
   </a>
   
-  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.4">
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.5">
     <img src="https://img.shields.io/github/v/release/MinatoAquaCrews/nonebot_plugin_what2eat?color=orange&include_prereleases">
   </a>
 
   <a href="https://www.codefactor.io/repository/github/MinatoAquaCrews/nonebot_plugin_what2eat">
     <img src="https://img.shields.io/codefactor/grade/github/MinatoAquaCrews/nonebot_plugin_what2eat/beta?color=red">
   </a>
+
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat">
+    <img src="https://img.shields.io/pypi/dm/nonebot_plugin_what2eat">
+  </a>
   
 </p>
 
 ## 版本
 
-v0.3.4 今天喝什么！菜品可以添加配图啦！
+v0.3.5 今天喝什么！菜品可以添加配图啦！
 
-⚠ 适配nonebot2-2.0.0b3+
+⚠ 适配nonebot2-2.0.0rc1+
 
-[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.4)
+[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.5)
 
 ## 安装
 
@@ -50,9 +54,9 @@ v0.3.4 今天喝什么！菜品可以添加配图啦！
 
 ## 功能
 
-1. 🔥 **新增** 选择恐惧症？让Bot建议你今天吃/喝什么！
+1. 🔥 选择恐惧症？让Bot建议你今天吃/喝什么！
 
-    👉 新增一点点、茶颜悦色、蜜雪冰城、茶百道、瑞幸咖啡、CoCo都可！预置菜单加入了更多菜品！
+    👉 新增**鸳央咖啡**菜单！
 
 2. **插件配置**
 
@@ -94,7 +98,7 @@ v0.3.4 今天喝什么！菜品可以添加配图啦！
 
 1. 吃什么：今天吃什么、中午吃啥、今晚吃啥、中午吃什么、晚上吃啥、晚上吃什么、夜宵吃啥……
 
-2. 🔥 **新增** 喝什么： 今天喝什么、中午喝啥、今晚喝啥、中午喝什么、晚上喝啥、晚上喝什么、夜宵喝啥……
+2. 🔥 喝什么： 今天喝什么、中午喝啥、今晚喝啥、中午喝什么、晚上喝啥、晚上喝什么、夜宵喝啥……
 
     ⚠ 与吃什么共用`EATING_LIMIT`次数
 
