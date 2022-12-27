@@ -20,7 +20,7 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
     <img src="https://img.shields.io/badge/nonebot2-2.0.0rc1+-green">
   </a>
   
-  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.5a2">
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.5">
     <img src="https://img.shields.io/github/v/release/MinatoAquaCrews/nonebot_plugin_what2eat?color=orange&include_prereleases">
   </a>
 
@@ -36,11 +36,11 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
 
 ## 版本
 
-v0.3.5a2 今天喝什么！菜品可以添加配图啦！
+v0.3.5 今天喝什么！菜品可以添加配图啦！
 
 ⚠ 适配nonebot2-2.0.0rc1+
 
-[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.5a2)
+[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.5)
 
 ## 安装
 
