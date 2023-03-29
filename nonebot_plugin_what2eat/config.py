@@ -48,7 +48,7 @@ async def download_url(url: str) -> Optional[Any]:
 
 
 async def download_file(_file: Path, _name: str) -> None:
-    _url = "https://raw.fastgit.org/MinatoAquaCrews/nonebot_plugin_what2eat/beta/nonebot_plugin_what2eat/resource/"
+    _url = "https://raw.githubusercontent.com/MinatoAquaCrews/nonebot_plugin_what2eat/beta/nonebot_plugin_what2eat/resource/"
     url = _url + _name
 
     resp = await download_url(url)
