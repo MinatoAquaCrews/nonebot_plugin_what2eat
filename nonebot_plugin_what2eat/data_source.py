@@ -1,6 +1,6 @@
-from nonebot.adapters.onebot.v11 import Message, MessageEvent, GroupMessageEvent, PrivateMessageEvent, MessageSegment
+from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, PrivateMessageEvent, MessageSegment
 from nonebot.adapters.onebot.v11 import ActionFailed
-from nonebot import get_bot, logger
+from nonebot import get_bot, logger, get_driver
 from pathlib import Path
 import random
 from typing import Optional, Union, List, Dict, Tuple
@@ -32,7 +32,7 @@ class EatingManager:
             if uid not in self._eating["count"][gid]:
                 self._eating["count"][gid][uid] = 0
 
-    def get2eat(self, event: MessageEvent) -> Tuple[Message, MessageSegment]:
+    def get2eat(self, event: Union[PrivateMessageEvent, GroupMessageEvent]) -> Tuple[Message, MessageSegment]:
         '''
             今天吃什么
         '''
@@ -72,7 +72,7 @@ class EatingManager:
 
             return msg
 
-    def get2drink(self, event: MessageEvent) -> MessageSegment:
+    def get2drink(self, event: Union[PrivateMessageEvent, GroupMessageEvent]) -> MessageSegment:
         '''
             今天喝什么
         '''
@@ -218,7 +218,7 @@ class EatingManager:
             # Return the food name user input instead of full name
             msg = f"{food_to_remove} 已从群菜单中删除~"
         elif status == FoodLoc.IN_BASIC:
-            if uid not in what2eat_config.superusers:
+            if uid not in get_driver().config.superusers:
                 msg = f"{food_to_remove} 在基础菜单中，非超管不可操作哦~"
             else:
                 self._eating["basic_food"].remove(food_fullname)

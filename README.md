@@ -3,16 +3,13 @@
 
 # What to Eat/Drink
 
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable-next-line MD036 -->
 _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜🌮🍔🧋🧃_
-<!-- prettier-ignore-end -->
 
 </div>
 
 <p align="center">
 
-  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/blob/beta/LICENSE">
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/blob/master/LICENSE">
     <img src="https://img.shields.io/github/license/MinatoAquaCrews/nonebot_plugin_what2eat?color=blue">
   </a>
 
@@ -20,12 +17,12 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
     <img src="https://img.shields.io/badge/nonebot2-2.0.0rc1+-green">
   </a>
 
-  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.5">
-    <img src="https://img.shields.io/github/v/release/MinatoAquaCrews/nonebot_plugin_what2eat?color=orange&include_prereleases">
+  <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.6a1">
+    <img src="https://img.shields.io/github/v/release/MinatoAquaCrews/nonebot_plugin_what2eat?color=orange">
   </a>
 
   <a href="https://www.codefactor.io/repository/github/MinatoAquaCrews/nonebot_plugin_what2eat">
-    <img src="https://img.shields.io/codefactor/grade/github/MinatoAquaCrews/nonebot_plugin_what2eat/beta?color=red">
+    <img src="https://img.shields.io/codefactor/grade/github/MinatoAquaCrews/nonebot_plugin_what2eat/master?color=red">
   </a>
 
   <a href="https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat">
@@ -36,17 +33,15 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
 
 ## 版本
 
-v0.3.5 今天喝什么！菜品可以添加配图啦！
+[v0.3.6a1](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.6a1)
 
 ⚠ 适配nonebot2-2.0.0rc1+
 
-[更新日志](https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat/releases/tag/v0.3.5)
+## 
 
-## 安装
+1. 通过 `pip` 或 `nb` 安装；
 
-1. 通过`pip`或`nb`安装；
-
-2. 数据默认位于`./resource`下`eating.json`、`drinks.json`与`greetings.json`，菜品的附图储存于`./resource/img`下。可通过设置`env`下`WHAT2EAT_PATH`更改；
+2. 数据默认位于插件的 `./resource` 下 `eating.json`、`drinks.json` 与 `greetings.json`，菜品的附图储存于`./resource/img`下。可通过设置 `env` 下 `WHAT2EAT_PATH` 更改资源的路径：
 
     ```python
     WHAT2EAT_PATH="your-path-to-resource"
@@ -61,46 +56,43 @@ v0.3.5 今天喝什么！菜品可以添加配图啦！
 2. **插件配置**
 
     ``` python
-    WHAT2EAT_PATH="your-path-to-resource"			# 资源路径
-    USE_PRESET_MENU=false							# 是否从repo中下载预置基础菜单，默认为False，请注意会覆盖原有的文件！
-    USE_PRESET_GREETINGS=false                    	# 是否从repo中下载预置问候语，默认为False
-    EATING_LIMIT=5									# 每个时段吃/喝什么次数上限，默认5次；每日6点、11点、17点、22点自动刷新
-    GREETING_GROUPS_ID=["123456789", "987654321"]	# 默认开启小助手群组，或{"123456789", "987654321"}
-    SUPERUSERS={"12345678"}							# 同nonebot超管配置
+    WHAT2EAT_PATH="your-path-to-resource"           # 资源路径
+    EATING_LIMIT=5                                  # 每个时段吃/喝什么次数上限，默认5次；每日6点、11点、17点、22点自动刷新
+    GREETING_GROUPS_ID=["123456789", "987654321"]   # 默认开启小助手的群组，或{"123456789", "987654321"}
+    WHAT2EAT_AUTO_UPDATE=false                      # 启动时是否自动更新文本资源，默认关闭
     ```
 
-3. 群管理可自行添加或移除群特色菜单（位于`eating.json`下`[group_food][group_id]`）；超管可添加或移除基础菜单（`[basic_food]`）；
+3. 群管理可自行添加或移除群特色菜单（位于 `eating.json` 下 `[group_food][group_id]` ）；超管可添加或移除基础菜单（ `[basic_food]` ）；
 
-    - 菜品文字与配图一一对应才视为相同的菜品，例如：文字相同而配图不同、文字与文字+配图、或文字不同而配图相同，这几种均视为不同菜品
+    - 菜品**文字与配图一一对应**才视为相同的菜品，例如：文字相同而配图不同、文字与文字+配图、或文字不同而配图相同，这几种均视为不同菜品
 
     - 当移除的菜品包含配图时，会一并移除相同配图的其他菜品
 
-4. 各群特色菜单相互独立；各群每个时间段询问Bot建议次数独立；Bot会综合各群菜单+基础菜单给出建议；
+    - 各群特色菜单相互独立；各群每个时间段询问Bot建议次数独立；Bot会综合各群菜单+基础菜单给出建议；
 
-5. 吃饭小助手：每天7、12、15、18、22点群发问候语提醒群友吃饭/摸鱼/下班，`GREETING_GROUPS_ID`设置常开的群号列表（或集合），每次启动插件时将置`True`，形如：
+4. 吃饭小助手：每天7、12、15、18、22点群发问候语提醒群友吃饭/摸鱼/下班，`GREETING_GROUPS_ID` 以设置常开的群号列表，形如：
 
     ```python
     GREETING_GROUPS_ID=["123456789", "987654321"]	# 名字长防止与其他插件配置名相同
     ```
 
-    ⚠ 群吃饭小助手启用配置存于`greetings.json`的`groups_id`字段
+    ⚠ 群吃饭小助手启用配置存于 `greetings.json` 的 `groups_id` 字段
 
-6. 初次使用该插件时，若不存在`eating.json`与`greetings.json`文件，设置`USE_PRESET_MENU`及`USE_PRESET_GREETINGS`可从仓库中尝试下载；会尝试从仓库中下载`drinks.json`。若资源下载失败且本地也不存在，则抛出错误。
+5. `WHAT2EAT_AUTO_UPDATE` 默认关闭，若开启，则插件在启动时自动更新文本资源，并尝试从仓库中下载 `eating.json`、`drinks.json`，并与本地对应的文本资源**合并**（若本地不存在，则保存至本地）。
 
     ```python
-    USE_PRESET_MENU=false
-    USE_PRESET_GREETINGS=false
+    WHAT2EAT_AUTO_UPDATE=false
     ```
 
-    ⚠ 从仓库下载会**覆写**原有文件！建议用户按需开启此配置
+    ⚠ 使用 `raw.fgit.ml` 进行下载，不确保次次成功
 
 ## 命令
 
 1. 吃什么：今天吃什么、中午吃啥、今晚吃啥、中午吃什么、晚上吃啥、晚上吃什么、夜宵吃啥……
 
-2. 🔥 喝什么： 今天喝什么、中午喝啥、今晚喝啥、中午喝什么、晚上喝啥、晚上喝什么、夜宵喝啥……
+2. 🔥 喝什么：今天喝什么、中午喝啥、今晚喝啥、中午喝什么、晚上喝啥、晚上喝什么、夜宵喝啥……
 
-    ⚠ 与吃什么共用`EATING_LIMIT`次数
+    ⚠ 与吃什么共用 `EATING_LIMIT` 次数
 
 3. [管理员或超管] 添加或移除群菜名：[添加/移除 菜名]；
 

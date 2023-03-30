@@ -16,14 +16,14 @@ class PluginConfig(BaseModel, extra=Extra.ignore):
     use_preset_greetings: bool = False
     eating_limit: int = 5
     greeting_groups_id: Set[str] = set()
-    superusers: Set[str] = set()
+    what2eat_auto_update: bool = False
 
 
 driver = get_driver()
 what2eat_config: PluginConfig = PluginConfig.parse_obj(driver.config.dict())
 
 
-class DownloadError(Exception):
+class ResourceError(Exception):
     def __init__(self, msg):
         self.msg = msg
 
@@ -31,33 +31,28 @@ class DownloadError(Exception):
         return self.msg
 
 
-async def download_url(url: str) -> Optional[Any]:
+class DownloadError(Exception):
+    pass
+
+
+async def download_url(name: str) -> Optional[Dict[str, Any]]:
+    url: str = "https://raw.fgit.ml/MinatoAquaCrews/nonebot_plugin_what2eat/master/nonebot_plugin_what2eat/resource/" + name
+
     async with httpx.AsyncClient() as client:
         for i in range(3):
             try:
                 response = await client.get(url)
                 if response.status_code != 200:
                     continue
+
                 return response.json()
+
             except Exception:
                 logger.warning(
                     f"Error occured when downloading {url}, retry: {i+1}/3")
 
-    logger.warning(f"Abort downloading")
+    logger.warning("Abort downloading")
     return None
-
-
-async def download_file(_file: Path, _name: str) -> None:
-    _url = "https://raw.githubusercontent.com/MinatoAquaCrews/nonebot_plugin_what2eat/beta/nonebot_plugin_what2eat/resource/"
-    url = _url + _name
-
-    resp = await download_url(url)
-    if resp is None and not _file.exists():
-        raise DownloadError(
-            f"Reseource {_name} download failed! Please check!")
-
-    save_json(_file, resp)
-    logger.info(f"Get the latest {_name} from repo")
 
 
 @driver.on_startup
@@ -69,18 +64,43 @@ async def what2eat_check() -> None:
         (what2eat_config.what2eat_path / "img").mkdir(parents=True, exist_ok=True)
 
     '''
-        If eating.json doesn't exist or eating.json exists but f.get["basic_food"] doesn't exist and USE_PRESET_MENU is True, download
-        If USE_PRESET_MENU is False, break
+        Get the latest eating.json from repo.
+        If it's newer than local,
+        TODO get the union set of "basic_food".
     '''
     eating_json: Path = what2eat_config.what2eat_path / "eating.json"
-    if what2eat_config.use_preset_menu:
+
+    cur_version: float = 0
+    if what2eat_config.what2eat_auto_update:
+        response = await download_url("eating.json")
+    else:
+        response = None
+
+    if response is None:
         if not eating_json.exists():
-            await download_file(eating_json, "eating.json")
+            logger.warning("What2eat text resource missing! Please check!")
+            raise ResourceError("Missing necessary resource: eating.json!")
+
+    else:
+        # Get the latest eating.json from repo and local data exists, check the keys then merge
+        try:
+            version: float = response["version"]
+        except KeyError:
+            logger.warning(
+                "What2eat text resource downloaded incompletely! Please check!")
+            raise DownloadError
+
+        # Get the latest eating.json from repo but local data doesn't exist, save
+        if not eating_json.exists():
+            save_json(eating_json, response)
+
         else:
-            # check the keys
             with eating_json.open("r", encoding="utf-8") as f:
-                _f: Dict[str, Union[List[str], Dict[str,
-                                                    Union[Dict[str, List[int]], List[str]]]]] = json.load(f)
+                _f = json.load(f)
+                
+                # For version below 0.3.6, there's no key of "version"
+                cur_version: float = _f.get("version", 0)
+                
                 if not _f.get("basic_food", False):
                     _f.update({"basic_food": []})
 
@@ -90,45 +110,80 @@ async def what2eat_check() -> None:
                 if not _f.get("count", False):
                     _f.update({"count": {}})
 
+                # Update "basic_food" when there is a newer version
+                if version > cur_version:
+                    _f.update({"basic_food": response.get("basic_food", [])})
+            
             save_json(eating_json, _f)
+        
+        if version > cur_version:
+            logger.info(f"Updated eating.json, version: {cur_version} -> {version}")
+
     '''
-        If greetings.json doesn't exist or greetings.json exists but ... ALL doesn't exist and USE_PRESET_greetings is True, download
-        If USE_PRESET_greetings is False, break
+        Get the latest drinks.json from repo.
+        If it's newer than local, overwrite it.
+        TODO Get the union set of drinks.json
+    '''
+    drinks_json: Path = what2eat_config.what2eat_path / "drinks.json"
+    
+    cur_version = 0
+    if what2eat_config.what2eat_auto_update:
+        response = await download_url("drinks.json")
+    else:
+        response = None
+    
+    if response is None:
+        if not drinks_json.exists():
+            logger.warning("What2eat text resource missing! Please check!")
+            raise ResourceError("Missing necessary resource: drinks.json!")
+
+    elif not drinks_json.exists():
+        save_json(drinks_json, response)
+    else:
+        try:
+            version = response["version"]
+        except KeyError:
+            logger.warning(
+                "What2eat text resource downloaded incompletely! Please check!")
+            raise DownloadError
+
+        # Update when there is a newer version
+        if version > cur_version:
+            save_json(drinks_json, _f)
+            logger.info(f"Updated drinks.json, version: {cur_version} -> {version}")
+
+    '''
+        Check greetings.json and its keys
+        If doesn't exist, try to download. Otherwise, check its keys.
+        greetings.json will NOT auto check for update.
     '''
     greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
-    if what2eat_config.use_preset_greetings:
-        if not greetings_json.exists():
-            await download_file(greetings_json, "greetings.json")
+    
+    if not greetings_json.exists():
+        response = download_url("greetings.json")
+        
+        if response is None:
+            logger.warning("What2eat text resource missing! Please check!")
+            raise ResourceError("Missing necessary resource: greetings.json!")
         else:
-            # Exists then check the keys
-            with greetings_json.open("r", encoding="utf-8") as f:
-                _f: Dict[str, Union[List[str], Dict[str, bool]]] = json.load(f)
-                for meal in Meals:
-                    if _f.get(meal.value[0], False):
-                        _f.update({meal.value[0]: []})
-
-                if not _f.get("groups_id", False):
-                    _f["groups_id"] = {}
-
-            save_json(greetings_json, _f)
-
-    '''
-        Get the latest drinks.json from repo
-        If failed, raise exception
-    '''
-    drinking_json: Path = what2eat_config.what2eat_path / "drinks.json"
-    await download_file(drinking_json, "drinks.json")
-
-    # Save groups id in greetings.json if len > 0
-    if len(what2eat_config.greeting_groups_id) > 0:
+            save_json(greetings_json, response)
+            logger.info(f"Downloaded greetings.json from repo")
+    
+    else:
+        # Exists then check the keys
         with greetings_json.open("r", encoding="utf-8") as f:
             _f: Dict[str, Union[List[str], Dict[str, bool]]] = json.load(f)
 
-            # Update the default groups
-            if not _f.get("groups_id", False):
-                _f["groups_id"] = {}
+            for meal in Meals:
+                if not _f.get(meal.value[0], False):
+                    _f.update({meal.value[0]: []})
 
-            for gid in what2eat_config.greeting_groups_id:
-                _f["groups_id"].update({gid: True})
+            if not _f.get("groups_id", False):
+                _f.update({"groups_id": {}})
+            
+            # Always update "groups_id" if greeting_groups_id is not empty
+            if len(what2eat_config.greeting_groups_id) > 0:
+                for gid in what2eat_config.greeting_groups_id:
+                    _f["groups_id"].update({gid: True})
 
         save_json(greetings_json, _f)
