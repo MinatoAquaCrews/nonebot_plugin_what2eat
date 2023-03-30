@@ -29,6 +29,10 @@ _🧃🧋🍔🌮🍜🍮🍣🍻🍩 今天吃/喝什么 🍩🍻🍣🍮🍜�
     <img src="https://img.shields.io/pypi/dm/nonebot_plugin_what2eat">
   </a>
 
+  <a href="https://results.pre-commit.ci/latest/github/MinatoAquaCrews/nonebot_plugin_what2eat/master">
+	<img src="https://results.pre-commit.ci/badge/github/MinatoAquaCrews/nonebot_plugin_what2eat/master.svg" alt="pre-commit.ci status">
+  </a>
+
 </p>
 
 ## 版本
