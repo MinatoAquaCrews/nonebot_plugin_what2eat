@@ -1,14 +1,18 @@
-from nonebot_plugin_apscheduler import scheduler
-from typing import Coroutine, Any, List
-from nonebot import on_command, on_regex, logger, require
+from typing import Any, Coroutine, List
+
+from nonebot import logger, on_command, on_regex, require
+from nonebot.adapters.onebot.v11 import (GROUP, GROUP_ADMIN, GROUP_OWNER, Bot,
+                                         GroupMessageEvent, Message,
+                                         MessageEvent, MessageSegment)
+from nonebot.matcher import Matcher
+from nonebot.params import Arg, ArgStr, CommandArg, Depends, RegexMatched
+from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
-from nonebot.permission import SUPERUSER
-from nonebot.adapters.onebot.v11 import Bot, GROUP, GROUP_ADMIN, GROUP_OWNER, Message, MessageEvent, MessageSegment, GroupMessageEvent
-from nonebot.params import Depends, Arg, ArgStr, CommandArg, RegexMatched
-from nonebot.matcher import Matcher
-from .utils import Meals, save_cq_image
+from nonebot_plugin_apscheduler import scheduler
+
 from .data_source import eating_manager
+from .utils import Meals, save_cq_image
 
 require("nonebot_plugin_apscheduler")
 

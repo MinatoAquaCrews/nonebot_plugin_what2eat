@@ -1,11 +1,14 @@
-from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, PrivateMessageEvent, MessageSegment
-from nonebot.adapters.onebot.v11 import ActionFailed
-from nonebot import Bot, get_bot, logger, get_driver
-from pathlib import Path
 import random
-from typing import Optional, Union, List, Dict, Tuple
-from .utils import *
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
+
+from nonebot import Bot, get_bot, get_driver, logger
+from nonebot.adapters.onebot.v11 import (ActionFailed, GroupMessageEvent,
+                                         Message, MessageSegment,
+                                         PrivateMessageEvent)
+
 from .config import what2eat_config
+from .utils import *
 
 
 class EatingManager:
@@ -401,9 +404,8 @@ class EatingManager:
                     await bot.call_api("send_group_msg", group_id=int(gid), message=msg)
                 except ActionFailed as e:
                     logger.warning(f"发送群 {gid} 失败：{e}")
-        
+
             logger.info(f"已群发{meal.value[1]}提醒")
-        
 
     def _get_greeting(self, meal: Meals) -> Optional[MessageSegment]:
         '''
