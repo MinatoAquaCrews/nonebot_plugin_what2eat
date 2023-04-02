@@ -281,38 +281,28 @@ async def _():
 # 早餐提醒
 @scheduler.scheduled_job("cron", hour=7, minute=0, misfire_grace_time=60)
 async def time_for_breakfast():
-    res = await eating_manager.do_greeting(Meals.BREAKFAST)
-    if res:
-        logger.info(f"已群发早餐提醒")
+    await eating_manager.do_greeting(Meals.BREAKFAST)
 
 
 # 午餐提醒
 @scheduler.scheduled_job("cron", hour=12, minute=0, misfire_grace_time=60)
 async def time_for_lunch():
-    res = await eating_manager.do_greeting(Meals.LUNCH)
-    if res:
-        logger.info(f"已群发午餐提醒")
+    await eating_manager.do_greeting(Meals.LUNCH)
 
 
 # 下午茶/摸鱼提醒
 @scheduler.scheduled_job("cron", hour=15, minute=0, misfire_grace_time=60)
 async def time_for_snack():
-    res = await eating_manager.do_greeting(Meals.SNACK)
-    if res:
-        logger.info(f"已群发摸鱼提醒")
+    await eating_manager.do_greeting(Meals.SNACK)
 
 
 # 晚餐提醒
 @scheduler.scheduled_job("cron", hour=18, minute=0, misfire_grace_time=60)
 async def time_for_dinner():
-    res = await eating_manager.do_greeting(Meals.DINNER)
-    if res:
-        logger.info(f"已群发晚餐提醒")
+    await eating_manager.do_greeting(Meals.DINNER)
 
 
 # 夜宵提醒
 @scheduler.scheduled_job("cron", hour=22, minute=0, misfire_grace_time=60)
 async def time_for_midnight():
-    res = await eating_manager.do_greeting(Meals.MIDNIGHT)
-    if res:
-        logger.info(f"已群发夜宵提醒")
+    await eating_manager.do_greeting(Meals.MIDNIGHT)

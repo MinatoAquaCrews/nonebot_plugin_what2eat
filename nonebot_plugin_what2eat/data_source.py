@@ -1,6 +1,6 @@
 from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, PrivateMessageEvent, MessageSegment
 from nonebot.adapters.onebot.v11 import ActionFailed
-from nonebot import get_bot, logger, get_driver
+from nonebot import Bot, get_bot, logger, get_driver
 from pathlib import Path
 import random
 from typing import Optional, Union, List, Dict, Tuple
@@ -385,12 +385,12 @@ class EatingManager:
 
         return MessageSegment.text(f"{greeting} 已从 {meal.value[1]} 问候中移除~")
 
-    async def do_greeting(self, meal: Meals) -> bool:
+    async def do_greeting(self, meal: Meals) -> None:
         try:
-            bot = get_bot()
+            bot: Bot = get_bot()
         except Exception as e:
             logger.warning(f"获取Bot失败：{e}")
-            return False
+            return
 
         self._greetings = load_json(self._greetings_json)
         msg = self._get_greeting(meal)
@@ -399,10 +399,11 @@ class EatingManager:
             for gid in self._greetings["groups_id"]:
                 try:
                     await bot.call_api("send_group_msg", group_id=int(gid), message=msg)
-                    return True
                 except ActionFailed as e:
                     logger.warning(f"发送群 {gid} 失败：{e}")
-                    return False
+        
+            logger.info(f"已群发{meal.value[1]}提醒")
+        
 
     def _get_greeting(self, meal: Meals) -> Optional[MessageSegment]:
         '''
