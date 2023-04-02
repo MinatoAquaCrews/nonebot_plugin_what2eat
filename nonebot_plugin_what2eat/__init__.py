@@ -16,7 +16,7 @@ from .utils import Meals, save_cq_image
 
 require("nonebot_plugin_apscheduler")
 
-__what2eat_version__ = "v0.3.6a2"
+__what2eat_version__ = "v0.3.6"
 __what2eat_usages__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot吃什么
