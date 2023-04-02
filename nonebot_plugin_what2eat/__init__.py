@@ -12,7 +12,7 @@ from .data_source import eating_manager
 
 require("nonebot_plugin_apscheduler")
 
-__what2eat_version__ = "v0.3.6a1"
+__what2eat_version__ = "v0.3.6a2"
 __what2eat_usages__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot吃什么
@@ -281,33 +281,38 @@ async def _():
 # 早餐提醒
 @scheduler.scheduled_job("cron", hour=7, minute=0, misfire_grace_time=60)
 async def time_for_breakfast():
-    await eating_manager.do_greeting(Meals.BREAKFAST)
-    logger.info(f"已群发早餐提醒")
+    res = await eating_manager.do_greeting(Meals.BREAKFAST)
+    if res:
+        logger.info(f"已群发早餐提醒")
 
 
 # 午餐提醒
 @scheduler.scheduled_job("cron", hour=12, minute=0, misfire_grace_time=60)
 async def time_for_lunch():
-    await eating_manager.do_greeting(Meals.LUNCH)
-    logger.info(f"已群发午餐提醒")
+    res = await eating_manager.do_greeting(Meals.LUNCH)
+    if res:
+        logger.info(f"已群发午餐提醒")
 
 
 # 下午茶/摸鱼提醒
 @scheduler.scheduled_job("cron", hour=15, minute=0, misfire_grace_time=60)
 async def time_for_snack():
-    await eating_manager.do_greeting(Meals.SNACK)
-    logger.info(f"已群发摸鱼提醒")
+    res = await eating_manager.do_greeting(Meals.SNACK)
+    if res:
+        logger.info(f"已群发摸鱼提醒")
 
 
 # 晚餐提醒
 @scheduler.scheduled_job("cron", hour=18, minute=0, misfire_grace_time=60)
 async def time_for_dinner():
-    await eating_manager.do_greeting(Meals.DINNER)
-    logger.info(f"已群发晚餐提醒")
+    res = await eating_manager.do_greeting(Meals.DINNER)
+    if res:
+        logger.info(f"已群发晚餐提醒")
 
 
 # 夜宵提醒
 @scheduler.scheduled_job("cron", hour=22, minute=0, misfire_grace_time=60)
 async def time_for_midnight():
-    await eating_manager.do_greeting(Meals.MIDNIGHT)
-    logger.info(f"已群发夜宵提醒")
+    res = await eating_manager.do_greeting(Meals.MIDNIGHT)
+    if res:
+        logger.info(f"已群发夜宵提醒")

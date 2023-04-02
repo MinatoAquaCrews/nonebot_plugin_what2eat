@@ -91,8 +91,8 @@ async def eating_check() -> None:
             with eating_json.open("r", encoding="utf-8") as f:
                 _local = json.load(f)
 
-                # For version below 0.3.6, there's no key of "version"
-                cur_version: float = _local.get("version", 0)
+                # For version below 0.3.6, there's no key of "version", set default 0
+                cur_version = _local.get("version", 0)
 
                 if not _local.get("basic_food", False):
                     _local.update({"basic_food": []})
@@ -103,7 +103,7 @@ async def eating_check() -> None:
                 if not _local.get("count", False):
                     _local.update({"count": {}})
 
-                # Update "basic_food" when there is a newer version
+                # Merge "basic_food" when there is a newer version
                 if version > cur_version:
                     _local.update({"version": version})
 
@@ -129,7 +129,7 @@ async def drinks_check() -> None:
     '''
     drinks_json: Path = what2eat_config.what2eat_path / "drinks.json"
 
-    cur_version = 0
+    cur_version: float = 0
     if what2eat_config.what2eat_auto_update:
         response = await download_url("drinks.json")
     else:
@@ -142,7 +142,7 @@ async def drinks_check() -> None:
 
     else:
         try:
-            version = response["version"]
+            version: float = response["version"]
         except KeyError:
             logger.warning(
                 "What2eat text resource downloaded incompletely! Please check!")
@@ -179,8 +179,8 @@ async def drinks_check() -> None:
                                     set(local_drinks).union(set(newer_drinks)))
 
                                 _local.update({branch: merged_drinks})
-                        # Branch but in local, update it
                         else:
+                            # Branch but in local, update it
                             _local.update({branch: response[branch]})
 
                 save_json(drinks_json, _local)
@@ -220,6 +220,7 @@ async def greetings_check() -> None:
 
             # Always update "groups_id" if greeting_groups_id is not empty
             if len(what2eat_config.greeting_groups_id) > 0:
+                # TODO filter the non-existing groups id, and output warning
                 for gid in what2eat_config.greeting_groups_id:
                     _local["groups_id"].update({gid: True})
 

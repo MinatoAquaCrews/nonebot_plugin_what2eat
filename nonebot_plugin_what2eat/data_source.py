@@ -267,6 +267,7 @@ class EatingManager:
             Reset eating times in every eating time
         '''
         self._eating = load_json(self._eating_json)
+
         for gid in self._eating["count"]:
             for uid in self._eating["count"][gid]:
                 self._eating["count"][gid][uid] = 0
@@ -385,8 +386,13 @@ class EatingManager:
 
         return MessageSegment.text(f"{greeting} 已从 {meal.value[1]} 问候中移除~")
 
-    async def do_greeting(self, meal: Meals) -> None:
-        bot = get_bot()
+    async def do_greeting(self, meal: Meals) -> bool:
+        try:
+            bot = get_bot()
+        except Exception as e:
+            logger.warning(f"发送群 {gid} 失败：{e}")
+            return False
+
         self._greetings = load_json(self._greetings_json)
         msg = self._get_greeting(meal)
 
@@ -395,8 +401,10 @@ class EatingManager:
                 if self._greetings["groups_id"].get(gid, False):
                     try:
                         await bot.call_api("send_group_msg", group_id=int(gid), message=msg)
+                        return True
                     except ActionFailed as e:
                         logger.warning(f"发送群 {gid} 失败：{e}")
+                        return False
 
     def _get_greeting(self, meal: Meals) -> Optional[MessageSegment]:
         '''
