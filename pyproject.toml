@@ -1,10 +1,14 @@
 [tool.poetry]
 name = "nonebot_plugin_what2eat"
-version = "0.3.5"
+version = "0.3.6a2"
 description = "Ask bot for what to eat or what to drink!"
 authors = ["KafCoppelia <k740677208@gmail.com>"]
 license = "MIT"
 readme = "README.md"
+homepage = "https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat"
+repository = "https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat"
+documentation = "https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat#readme"
+keywords = ["nonebot2", "nonebot-plugin", "What2eat", "What2drink", "MinatoAquaCrews"]
 packages = [{include = "nonebot_plugin_what2eat"}]
 
 [tool.poetry.dependencies]
@@ -15,6 +19,9 @@ nonebot-plugin-apscheduler = "^0.2.0"
 httpx = "^0.23.0"
 aiofiles = "^0.8.0"
 
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^2.0.2"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
@@ -22,4 +29,5 @@ build-backend = "poetry.core.masonry.api"
 [[tool.poetry.source]]
 name = "tencentyun"
 url = "https://mirrors.tencent.com/pypi/simple"
-default = true
+default = false
+secondary = false

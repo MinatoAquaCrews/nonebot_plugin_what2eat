@@ -1,18 +1,22 @@
-from typing import Coroutine, Any, List
-from nonebot import on_command, on_regex, logger, require
+from typing import Any, Coroutine, List
+
+from nonebot import logger, on_command, on_regex, require
+from nonebot.adapters.onebot.v11 import (GROUP, GROUP_ADMIN, GROUP_OWNER, Bot,
+                                         GroupMessageEvent, Message,
+                                         MessageEvent, MessageSegment)
+from nonebot.matcher import Matcher
+from nonebot.params import Arg, ArgStr, CommandArg, Depends, RegexMatched
+from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
-from nonebot.permission import SUPERUSER
-from nonebot.adapters.onebot.v11 import Bot, GROUP, GROUP_ADMIN, GROUP_OWNER, Message, MessageEvent, MessageSegment, GroupMessageEvent
-from nonebot.params import Depends, Arg, ArgStr, CommandArg, RegexMatched
-from nonebot.matcher import Matcher
-from .utils import Meals, save_cq_image
-from .data_source import eating_manager
-
-require("nonebot_plugin_apscheduler")
 from nonebot_plugin_apscheduler import scheduler
 
-__what2eat_version__ = "v0.3.5"
+from .data_source import eating_manager
+from .utils import Meals, save_cq_image
+
+require("nonebot_plugin_apscheduler")
+
+__what2eat_version__ = "v0.3.6a2"
 __what2eat_usages__ = f'''
 今天吃什么？ {__what2eat_version__}
 [xx吃xx]    问bot吃什么
@@ -35,18 +39,27 @@ __plugin_meta__ = PluginMetadata(
     }
 )
 
-what2eat = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)吃(什么|啥|点啥)(帮助)?$", priority=15)
-what2drink = on_regex(r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)喝(什么|啥|点啥)(帮助)?$", priority=15)
-group_add = on_command("添加", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
-group_remove = on_command("移除", permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
+what2eat = on_regex(
+    r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)吃(什么|啥|点啥)(帮助)?$", priority=15)
+what2drink = on_regex(
+    r"^(今天|[早中午晚][上饭餐午]|早上|夜宵|今晚)喝(什么|啥|点啥)(帮助)?$", priority=15)
+group_add = on_command("添加", permission=SUPERUSER |
+                       GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
+group_remove = on_command("移除", permission=SUPERUSER |
+                          GROUP_ADMIN | GROUP_OWNER, priority=15, block=True)
 basic_add = on_command("加菜", permission=SUPERUSER, priority=15, block=True)
-show_group_menu = on_command("菜单", aliases={"群菜单", "查看菜单"}, permission=GROUP, priority=15, block=True)
+show_group_menu = on_command(
+    "菜单", aliases={"群菜单", "查看菜单"}, permission=GROUP, priority=15, block=True)
 show_basic_menu = on_command("基础菜单", permission=GROUP, priority=15, block=True)
 
-greeting_on = on_command("开启小助手", aliases={"启用小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=12, block=True)
-greeting_off = on_command("关闭小助手", aliases={"禁用小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=12, block=True)
-add_greeting = on_command("添加问候", aliases={"添加问候语"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=12, block=True)
-remove_greeting = on_command("删除问候", aliases={"删除问候语", "移除问候", "移除问候语"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=12, block=True)
+greeting_on = on_command("开启小助手", aliases={
+                         "启用小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=12, block=True)
+greeting_off = on_command("关闭小助手", aliases={
+                          "禁用小助手"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=12, block=True)
+add_greeting = on_command("添加问候", aliases={
+                          "添加问候语"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=12, block=True)
+remove_greeting = on_command("删除问候", aliases={
+                             "删除问候语", "移除问候", "移除问候语"}, permission=SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority=12, block=True)
 
 
 @what2eat.handle()
@@ -136,18 +149,18 @@ async def _(bot: Bot, matcher: Matcher, event: GroupMessageEvent):
     else:
         await matcher.finish(msg)
 
-# ------------------------- Greetings -------------------------
+
 @greeting_on.handle()
 async def _(event: GroupMessageEvent):
     gid = str(event.group_id)
-    eating_manager.update_groups_on(gid, True)
+    eating_manager.update_greeting_status(gid, True)
     await greeting_on.finish("已开启吃饭小助手~")
 
 
 @greeting_off.handle()
 async def _(event: GroupMessageEvent):
     gid = str(event.group_id)
-    eating_manager.update_groups_on(gid, False)
+    eating_manager.update_greeting_status(gid, False)
     await greeting_off.finish("已关闭吃饭小助手~")
 
 
@@ -273,32 +286,27 @@ async def _():
 @scheduler.scheduled_job("cron", hour=7, minute=0, misfire_grace_time=60)
 async def time_for_breakfast():
     await eating_manager.do_greeting(Meals.BREAKFAST)
-    logger.info(f"已群发早餐提醒")
 
 
 # 午餐提醒
 @scheduler.scheduled_job("cron", hour=12, minute=0, misfire_grace_time=60)
 async def time_for_lunch():
     await eating_manager.do_greeting(Meals.LUNCH)
-    logger.info(f"已群发午餐提醒")
 
 
 # 下午茶/摸鱼提醒
 @scheduler.scheduled_job("cron", hour=15, minute=0, misfire_grace_time=60)
 async def time_for_snack():
     await eating_manager.do_greeting(Meals.SNACK)
-    logger.info(f"已群发摸鱼提醒")
 
 
 # 晚餐提醒
 @scheduler.scheduled_job("cron", hour=18, minute=0, misfire_grace_time=60)
 async def time_for_dinner():
     await eating_manager.do_greeting(Meals.DINNER)
-    logger.info(f"已群发晚餐提醒")
 
 
 # 夜宵提醒
 @scheduler.scheduled_job("cron", hour=22, minute=0, misfire_grace_time=60)
 async def time_for_midnight():
     await eating_manager.do_greeting(Meals.MIDNIGHT)
-    logger.info(f"已群发夜宵提醒")

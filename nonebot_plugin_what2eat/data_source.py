@@ -1,11 +1,14 @@
-from nonebot.adapters.onebot.v11 import Message, MessageEvent, GroupMessageEvent, PrivateMessageEvent, MessageSegment
-from nonebot.adapters.onebot.v11 import ActionFailed
-from nonebot import get_bot, logger
-from pathlib import Path
 import random
-from typing import Optional, Union, List, Dict, Tuple
-from .utils import *
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
+
+from nonebot import Bot, get_bot, get_driver, logger
+from nonebot.adapters.onebot.v11 import (ActionFailed, GroupMessageEvent,
+                                         Message, MessageSegment,
+                                         PrivateMessageEvent)
+
 from .config import what2eat_config
+from .utils import *
 
 
 class EatingManager:
@@ -32,7 +35,7 @@ class EatingManager:
             if uid not in self._eating["count"][gid]:
                 self._eating["count"][gid][uid] = 0
 
-    def get2eat(self, event: MessageEvent) -> Tuple[Message, MessageSegment]:
+    def get2eat(self, event: Union[PrivateMessageEvent, GroupMessageEvent]) -> Tuple[Message, MessageSegment]:
         '''
             今天吃什么
         '''
@@ -72,7 +75,7 @@ class EatingManager:
 
             return msg
 
-    def get2drink(self, event: MessageEvent) -> MessageSegment:
+    def get2drink(self, event: Union[PrivateMessageEvent, GroupMessageEvent]) -> MessageSegment:
         '''
             今天喝什么
         '''
@@ -218,7 +221,7 @@ class EatingManager:
             # Return the food name user input instead of full name
             msg = f"{food_to_remove} 已从群菜单中删除~"
         elif status == FoodLoc.IN_BASIC:
-            if uid not in what2eat_config.superusers:
+            if uid not in get_driver().config.superusers:
                 msg = f"{food_to_remove} 在基础菜单中，非超管不可操作哦~"
             else:
                 self._eating["basic_food"].remove(food_fullname)
@@ -267,6 +270,7 @@ class EatingManager:
             Reset eating times in every eating time
         '''
         self._eating = load_json(self._eating_json)
+
         for gid in self._eating["count"]:
             for uid in self._eating["count"][gid]:
                 self._eating["count"][gid][uid] = 0
@@ -316,18 +320,17 @@ class EatingManager:
         return 0, MessageSegment.text("还没有基础菜单呢，请[添加 菜名]🤤")
 
     # ------------------------- Greetings -------------------------
-    def update_groups_on(self, gid: str, new_state: bool) -> None:
+    def update_greeting_status(self, gid: str, new_state: bool) -> None:
         '''
             Turn on/off greeting tips in group
         '''
         self._greetings = load_json(self._greetings_json)
 
         if new_state:
-            if gid not in self._greetings["groups_id"]:
-                self._greetings["groups_id"].update({gid: True})
+            self._greetings["groups_id"].update({gid: True})
         else:
             if gid in self._greetings["groups_id"]:
-                self._greetings["groups_id"].update({gid: False})
+                self._greetings["groups_id"].pop(gid)
 
         save_json(self._greetings_json, self._greetings)
 
@@ -386,17 +389,23 @@ class EatingManager:
         return MessageSegment.text(f"{greeting} 已从 {meal.value[1]} 问候中移除~")
 
     async def do_greeting(self, meal: Meals) -> None:
-        bot = get_bot()
+        try:
+            bot: Bot = get_bot()
+        except Exception as e:
+            logger.warning(f"获取Bot失败：{e}")
+            return
+
         self._greetings = load_json(self._greetings_json)
         msg = self._get_greeting(meal)
 
         if isinstance(msg, MessageSegment) and bool(self._greetings["groups_id"]) > 0:
             for gid in self._greetings["groups_id"]:
-                if self._greetings["groups_id"].get(gid, False):
-                    try:
-                        await bot.call_api("send_group_msg", group_id=int(gid), message=msg)
-                    except ActionFailed as e:
-                        logger.warning(f"发送群 {gid} 失败：{e}")
+                try:
+                    await bot.call_api("send_group_msg", group_id=int(gid), message=msg)
+                except ActionFailed as e:
+                    logger.warning(f"发送群 {gid} 失败：{e}")
+
+            logger.info(f"已群发{meal.value[1]}提醒")
 
     def _get_greeting(self, meal: Meals) -> Optional[MessageSegment]:
         '''

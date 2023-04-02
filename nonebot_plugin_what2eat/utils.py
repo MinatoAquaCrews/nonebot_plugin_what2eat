@@ -1,10 +1,12 @@
-from nonebot.adapters.onebot.v11 import Message, MessageSegment
-from nonebot import logger
+from enum import Enum
 from pathlib import Path
 from typing import Any, List, Optional
-from enum import Enum
-import httpx
+
 import aiofiles
+import httpx
+from nonebot import logger
+from nonebot.adapters.onebot.v11 import Message, MessageSegment
+
 try:
     import ujson as json
 except ModuleNotFoundError:
@@ -66,7 +68,9 @@ async def get_image_from_url(url: str) -> Optional[bytes]:
                 resp = await client.get(url)
                 if resp.status_code != 200:
                     continue
+
                 return resp.content
+
             except Exception:
                 logger.warning(
                     f"Error occurred when downloading {url}, retry: {i+1}/3")
@@ -75,7 +79,7 @@ async def get_image_from_url(url: str) -> Optional[bytes]:
     return None
 
 
-async def save_image(_img: bytes, _path: Path):
+async def save_image(_img: bytes, _path: Path) -> None:
     async with aiofiles.open(_path, "wb") as f:
         await f.write(_img)
 
