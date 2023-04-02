@@ -61,8 +61,8 @@ async def eating_check() -> None:
         If it's newer than local, get the union set of "basic_food".
     '''
     eating_json: Path = what2eat_config.what2eat_path / "eating.json"
-
     cur_version: float = 0
+    
     if what2eat_config.what2eat_auto_update:
         response = await download_url("eating.json")
     else:
@@ -128,8 +128,8 @@ async def drinks_check() -> None:
         If it's newer than local, get the union set of each keys in drinks.json
     '''
     drinks_json: Path = what2eat_config.what2eat_path / "drinks.json"
-
     cur_version: float = 0
+    
     if what2eat_config.what2eat_auto_update:
         response = await download_url("drinks.json")
     else:
@@ -220,7 +220,6 @@ async def greetings_check() -> None:
 
             # Always update "groups_id" if greeting_groups_id is not empty
             if len(what2eat_config.greeting_groups_id) > 0:
-                # TODO filter the non-existing groups id, and output warning
                 for gid in what2eat_config.greeting_groups_id:
                     _local["groups_id"].update({gid: True})
 

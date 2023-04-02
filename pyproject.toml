@@ -1,11 +1,13 @@
 [tool.poetry]
 name = "nonebot_plugin_what2eat"
-version = "0.3.6a1"
+version = "0.3.6a2"
 description = "Ask bot for what to eat or what to drink!"
 authors = ["KafCoppelia <k740677208@gmail.com>"]
 license = "MIT"
 readme = "README.md"
+homepage = "https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat"
 repository = "https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat"
+documentation = "https://github.com/MinatoAquaCrews/nonebot_plugin_what2eat#readme"
 keywords = ["nonebot2", "nonebot-plugin", "What2eat", "What2drink", "MinatoAquaCrews"]
 packages = [{include = "nonebot_plugin_what2eat"}]
 

@@ -149,14 +149,14 @@ async def _(bot: Bot, matcher: Matcher, event: GroupMessageEvent):
 @greeting_on.handle()
 async def _(event: GroupMessageEvent):
     gid = str(event.group_id)
-    eating_manager.update_groups_on(gid, True)
+    eating_manager.update_greeting_status(gid, True)
     await greeting_on.finish("已开启吃饭小助手~")
 
 
 @greeting_off.handle()
 async def _(event: GroupMessageEvent):
     gid = str(event.group_id)
-    eating_manager.update_groups_on(gid, False)
+    eating_manager.update_greeting_status(gid, False)
     await greeting_off.finish("已关闭吃饭小助手~")
 
 

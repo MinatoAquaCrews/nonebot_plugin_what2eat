@@ -317,18 +317,17 @@ class EatingManager:
         return 0, MessageSegment.text("还没有基础菜单呢，请[添加 菜名]🤤")
 
     # ------------------------- Greetings -------------------------
-    def update_groups_on(self, gid: str, new_state: bool) -> None:
+    def update_greeting_status(self, gid: str, new_state: bool) -> None:
         '''
             Turn on/off greeting tips in group
         '''
         self._greetings = load_json(self._greetings_json)
 
         if new_state:
-            if gid not in self._greetings["groups_id"]:
-                self._greetings["groups_id"].update({gid: True})
+            self._greetings["groups_id"].update({gid: True})
         else:
             if gid in self._greetings["groups_id"]:
-                self._greetings["groups_id"].update({gid: False})
+                self._greetings["groups_id"].pop(gid)
 
         save_json(self._greetings_json, self._greetings)
 
@@ -390,7 +389,7 @@ class EatingManager:
         try:
             bot = get_bot()
         except Exception as e:
-            logger.warning(f"发送群 {gid} 失败：{e}")
+            logger.warning(f"获取Bot失败：{e}")
             return False
 
         self._greetings = load_json(self._greetings_json)
@@ -398,13 +397,12 @@ class EatingManager:
 
         if isinstance(msg, MessageSegment) and bool(self._greetings["groups_id"]) > 0:
             for gid in self._greetings["groups_id"]:
-                if self._greetings["groups_id"].get(gid, False):
-                    try:
-                        await bot.call_api("send_group_msg", group_id=int(gid), message=msg)
-                        return True
-                    except ActionFailed as e:
-                        logger.warning(f"发送群 {gid} 失败：{e}")
-                        return False
+                try:
+                    await bot.call_api("send_group_msg", group_id=int(gid), message=msg)
+                    return True
+                except ActionFailed as e:
+                    logger.warning(f"发送群 {gid} 失败：{e}")
+                    return False
 
     def _get_greeting(self, meal: Meals) -> Optional[MessageSegment]:
         '''
