@@ -5,7 +5,7 @@ from nonebot.adapters.onebot.v11 import (GROUP, GROUP_ADMIN, GROUP_OWNER, Bot,
                                          GroupMessageEvent, Message,
                                          MessageEvent, MessageSegment)
 from nonebot.matcher import Matcher
-from nonebot.params import Arg, ArgStr, CommandArg, Depends, RegexStr
+from nonebot.params import Arg, ArgStr, CommandArg, Depends, RegexMatched
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
@@ -63,7 +63,7 @@ remove_greeting = on_command("删除问候", aliases={
 
 
 @what2eat.handle()
-async def _(event: MessageEvent, args: str = RegexStr()):
+async def _(event: MessageEvent, args: str = RegexMatched()):
     if args[-2:] == "帮助":
         await what2eat.finish(__what2eat_usages__)
 
@@ -72,7 +72,7 @@ async def _(event: MessageEvent, args: str = RegexStr()):
 
 
 @what2drink.handle()
-async def _(event: MessageEvent, args: str = RegexStr()):
+async def _(event: MessageEvent, args: str = RegexMatched()):
     if args[-2:] == "帮助":
         await what2drink.finish(__what2eat_usages__)
 
