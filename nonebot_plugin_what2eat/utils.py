@@ -1,7 +1,6 @@
 from enum import Enum
 from pathlib import Path
 from typing import Any, List, Optional
-
 import aiofiles
 import httpx
 from nonebot import logger
@@ -39,7 +38,7 @@ EatingEnough_List: List[str] = [
     "害搁这吃呢？不工作的吗？",
     "再吃肚子就要爆炸咯~",
     "你是米虫吗？今天碳水要爆炸啦！",
-    "去码头整点薯条吧🍟"
+    "去码头整点薯条吧🍟",
 ]
 
 DrinkingEnough_List: List[str] = [
@@ -47,17 +46,17 @@ DrinkingEnough_List: List[str] = [
     "喝这么多的吗？",
     "害搁这喝呢？不工作的吗？",
     "再喝肚子就要爆炸咯~",
-    "你是水桶吗？今天糖分要超标啦！"
+    "你是水桶吗？今天糖分要超标啦！",
 ]
 
 
 def save_json(_file: Path, _data: Any) -> None:
-    with open(_file, 'w', encoding='utf-8') as f:
+    with open(_file, "w", encoding="utf-8") as f:
         json.dump(_data, f, ensure_ascii=False, indent=4)
 
 
 def load_json(_file: Path) -> Any:
-    with open(_file, 'r', encoding='utf-8') as f:
+    with open(_file, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -72,8 +71,7 @@ async def get_image_from_url(url: str) -> Optional[bytes]:
                 return resp.content
 
             except Exception:
-                logger.warning(
-                    f"Error occurred when downloading {url}, retry: {i+1}/3")
+                logger.warning(f"Error occurred when downloading {url}, retry: {i+1}/3")
 
     logger.warning(f"Download image failed: {url}")
     return None
@@ -92,16 +90,15 @@ async def save_cq_image(msg: Message, img_dir: Path) -> None:
                 continue
 
             # Check whether there is a same name image
-            images: List[str] = [
-                f.name for f in img_dir.iterdir() if f.is_file()]
-            filepath: Path = img_dir / filename
+            images: List[str] = [f.name for f in img_dir.iterdir() if f.is_file()]
+            filepath: Path = img_dir / filename # type: ignore
 
             if filename not in images:
                 url = msg_seg.data.get("url", False)
                 if url is False:
                     continue
 
-                data = await get_image_from_url(url)
+                data = await get_image_from_url(url) # type: ignore
                 if not data:
                     continue
 
@@ -119,7 +116,7 @@ def delete_cq_image(str_cq: str) -> bool:
     if _end == -1:
         return False
 
-    delete_path: Path = Path(str_cq[_start + 7: _end + 6])
+    delete_path: Path = Path(str_cq[_start + 7 : _end + 6])
     if not delete_path.is_file():
         return False
 
@@ -129,4 +126,4 @@ def delete_cq_image(str_cq: str) -> bool:
 
 
 def get_cq_image_path(str_cq: str) -> str:
-    return str_cq[str_cq.find("file://") + 7: str_cq.find(".image") + 6]
+    return str_cq[str_cq.find("file://") + 7 : str_cq.find(".image") + 6]
