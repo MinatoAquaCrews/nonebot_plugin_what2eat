@@ -1,10 +1,8 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Union
-
 import httpx
 from nonebot import get_driver, logger
 from pydantic import BaseModel, Extra
-
 from .utils import Meals, save_json
 
 try:
@@ -39,7 +37,10 @@ class DownloadError(Exception):
 
 
 async def download_url(name: str) -> Optional[Dict[str, Any]]:
-    url: str = "https://raw.fgit.ml/MinatoAquaCrews/nonebot_plugin_what2eat/master/nonebot_plugin_what2eat/resource/" + name
+    url: str = (
+        "https://raw.fgit.ml/MinatoAquaCrews/nonebot_plugin_what2eat/master/nonebot_plugin_what2eat/resource/"
+        + name
+    )
 
     async with httpx.AsyncClient() as client:
         for i in range(3):
@@ -51,18 +52,17 @@ async def download_url(name: str) -> Optional[Dict[str, Any]]:
                 return response.json()
 
             except Exception:
-                logger.warning(
-                    f"Error occured when downloading {url}, retry: {i+1}/3")
+                logger.warning(f"Error occured when downloading {url}, retry: {i+1}/3")
 
     logger.warning("Abort downloading")
     return None
 
 
 async def eating_check() -> None:
-    '''
-        Get the latest eating.json from repo.
-        If it's newer than local, get the union set of "basic_food".
-    '''
+    """
+    Get the latest eating.json from repo.
+    If it's newer than local, get the union set of "basic_food".
+    """
     eating_json: Path = what2eat_config.what2eat_path / "eating.json"
     cur_version: float = 0
 
@@ -82,7 +82,8 @@ async def eating_check() -> None:
             version: float = response["version"]
         except KeyError:
             logger.warning(
-                "What2eat text resource downloaded incompletely! Please check!")
+                "What2eat text resource downloaded incompletely! Please check!"
+            )
             raise DownloadError
 
         # Get the latest eating.json from repo but local data doesn't exist, save
@@ -111,25 +112,24 @@ async def eating_check() -> None:
                     _local.update({"version": version})
 
                     local_basic_food: List[str] = _local.get("basic_food", [])
-                    newer_basic_food: List[str] = response.get(
-                        "basic_food", [])
+                    newer_basic_food: List[str] = response.get("basic_food", [])
                     merged_basic_food: List[str] = list(
-                        set(local_basic_food).union(set(newer_basic_food)))
+                        set(local_basic_food).union(set(newer_basic_food))
+                    )
 
                     _local.update({"basic_food": merged_basic_food})
 
             save_json(eating_json, _local)
 
         if version > cur_version:
-            logger.info(
-                f"Updated eating.json, version: {cur_version} -> {version}")
+            logger.info(f"Updated eating.json, version: {cur_version} -> {version}")
 
 
 async def drinks_check() -> None:
-    '''
-        Get the latest drinks.json from repo.
-        If it's newer than local, get the union set of each keys in drinks.json
-    '''
+    """
+    Get the latest drinks.json from repo.
+    If it's newer than local, get the union set of each keys in drinks.json
+    """
     drinks_json: Path = what2eat_config.what2eat_path / "drinks.json"
     cur_version: float = 0
 
@@ -148,7 +148,8 @@ async def drinks_check() -> None:
             version: float = response["version"]
         except KeyError:
             logger.warning(
-                "What2eat text resource downloaded incompletely! Please check!")
+                "What2eat text resource downloaded incompletely! Please check!"
+            )
             raise DownloadError
 
         # Update when there is a newer version
@@ -163,7 +164,8 @@ async def drinks_check() -> None:
                     local_branches: List[str] = _local.keys()
                     newer_branches: List[str] = response.keys()
                     merged_branches: List[str] = list(
-                        set(local_branches).union(set(newer_branches)))
+                        set(local_branches).union(set(newer_branches))
+                    )
 
                     # Merge each of drink branches
                     for branch in merged_branches:
@@ -174,12 +176,11 @@ async def drinks_check() -> None:
                         if branch in _local:
                             # Branch in local and in repo, merge drinking list
                             if branch in response:
-                                local_drinks: List[str] = _local.get(
-                                    branch, [])
-                                newer_drinks: List[str] = response.get(
-                                    branch, [])
+                                local_drinks: List[str] = _local.get(branch, [])
+                                newer_drinks: List[str] = response.get(branch, [])
                                 merged_drinks: List[str] = list(
-                                    set(local_drinks).union(set(newer_drinks)))
+                                    set(local_drinks).union(set(newer_drinks))
+                                )
 
                                 _local.update({branch: merged_drinks})
                         else:
@@ -188,16 +189,15 @@ async def drinks_check() -> None:
 
                 save_json(drinks_json, _local)
 
-            logger.info(
-                f"Updated drinks.json, version: {cur_version} -> {version}")
+            logger.info(f"Updated drinks.json, version: {cur_version} -> {version}")
 
 
 async def greetings_check() -> None:
-    '''
-        Check greetings.json and its keys
-        If doesn't exist, try to download. Otherwise, check its keys.
-        greetings.json will NOT auto check for update.
-    '''
+    """
+    Check greetings.json and its keys
+    If doesn't exist, try to download. Otherwise, check its keys.
+    greetings.json will NOT auto check for update.
+    """
     greetings_json: Path = what2eat_config.what2eat_path / "greetings.json"
 
     if not greetings_json.exists():
