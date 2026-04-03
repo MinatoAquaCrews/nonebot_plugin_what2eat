@@ -1,4 +1,5 @@
-from typing import Any, Coroutine, List
+from re import Match
+from typing import Any, Coroutine, List, Union
 
 from nonebot import logger, on_command, on_regex, require
 from nonebot.adapters.onebot.v11 import (GROUP, GROUP_ADMIN, GROUP_OWNER, Bot,
@@ -63,8 +64,9 @@ remove_greeting = on_command("删除问候", aliases={
 
 
 @what2eat.handle()
-async def _(event: MessageEvent, args: str = RegexMatched()):
-    if args[-2:] == "帮助":
+async def _(event: MessageEvent, args: Union[str, Match[str]] = RegexMatched()):
+    matched = args if isinstance(args, str) else args.group(0)
+    if matched.endswith("帮助"):
         await what2eat.finish(__what2eat_usages__)
 
     msg = eating_manager.get2eat(event)
@@ -72,8 +74,9 @@ async def _(event: MessageEvent, args: str = RegexMatched()):
 
 
 @what2drink.handle()
-async def _(event: MessageEvent, args: str = RegexMatched()):
-    if args[-2:] == "帮助":
+async def _(event: MessageEvent, args: Union[str, Match[str]] = RegexMatched()):
+    matched = args if isinstance(args, str) else args.group(0)
+    if matched.endswith("帮助"):
         await what2drink.finish(__what2eat_usages__)
 
     msg = eating_manager.get2drink(event)
