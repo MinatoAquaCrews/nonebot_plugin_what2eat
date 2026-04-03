@@ -39,6 +39,8 @@ class EatingManager:
         '''
             今天吃什么
         '''
+        self._eating = load_json(self._eating_json)
+
         # Deal with private message event FIRST
         if isinstance(event, PrivateMessageEvent):
             if len(self._eating["basic_food"]) > 0:
@@ -50,7 +52,6 @@ class EatingManager:
         gid: str = str(event.group_id)
         food_list: List[str] = []
 
-        self._eating = load_json(self._eating_json)
         self._init_data(gid, uid)
 
         # Check whether is full of stomach
